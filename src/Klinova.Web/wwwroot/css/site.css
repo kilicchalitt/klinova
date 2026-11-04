@@ -289,3 +289,5 @@ body.portal { background: var(--kl-surface); display: flex; flex-direction: colu
 }
 .appointment-card { border-left: 4px solid var(--kl-brand); }
 .appointment-date { font-size: 1.15rem; font-weight: 700; }
+
+.notification-item.unread { background: rgba(var(--kl-brand-rgb), .05); box-shadow: inset 3px 0 0 var(--kl-brand); }

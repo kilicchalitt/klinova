@@ -7,13 +7,15 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Klinova.Web.Pages.Portal;
 
-public class IndexModel(FacilityService facilities, PortalAccounts accounts, AppointmentService appointments, Application.Abstractions.IClock clock) : PageModel
+public class IndexModel(FacilityService facilities, PortalAccounts accounts, AppointmentService appointments, Application.Notifications.PatientInbox inbox, Application.Abstractions.IClock clock) : PageModel
 {
     public List<FacilityListItem> Facilities { get; private set; } = [];
 
     public string? PatientName { get; private set; }
 
     public List<AppointmentListItem> Upcoming { get; private set; } = [];
+
+    public List<Domain.Notifications.Notification> Unread { get; private set; } = [];
 
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {
@@ -32,6 +34,7 @@ public class IndexModel(FacilityService facilities, PortalAccounts accounts, App
                 .Where(a => a.Status == Domain.Appointments.AppointmentStatus.Booked && a.Date >= today)
                 .OrderBy(a => a.StartsAtLocal)
                 .ToList();
+            Unread = (await inbox.ListAsync(patient.Id, take: 20, ct)).Where(n => n.ReadAtUtc is null).Take(3).ToList();
         }
 
         return Page();

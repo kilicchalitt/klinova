@@ -13,7 +13,7 @@
     else
     {
         <h1 class="h2">Online randevu artık çok kolay</h1>
-        <p class="mb-4">İl ve kurum seçin, polikliniğinizi ve hekiminizi belirleyin, size uygun saati seçin. Randevu bilgileriniz SMS ile gönderilir, randevu gününden önce hatırlatılır.</p>
+        <p class="mb-4">İl ve kurum seçin, polikliniğinizi ve hekiminizi belirleyin, size uygun saati seçin. Randevu onayı ve hatırlatmalar "Bildirimlerim" bölümünüze düşer.</p>
     }
     <div class="d-flex flex-wrap gap-2">
         <a asp-page="Book" class="btn btn-light btn-lg"><i class="bi bi-calendar-plus me-2"></i>Randevu Al</a>
@@ -27,6 +27,22 @@
         }
     </div>
 </section>
+
+@if (Model.Unread.Count > 0)
+{
+    <div class="card mb-4 border-primary">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-bell-fill text-primary me-2"></i>Yeni bildirimleriniz</span>
+            <a asp-page="Notifications" class="small">Tümünü gör <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <ul class="list-group list-group-flush">
+            @foreach (var n in Model.Unread)
+            {
+                <li class="list-group-item"><span class="fw-medium">@n.Type.DisplayName():</span> @n.Body</li>
+            }
+        </ul>
+    </div>
+}
 
 @if (Model.Upcoming.Count > 0)
 {
@@ -61,14 +77,14 @@
         <div class="card h-100"><div class="card-body">
             <span class="feature-icon"><i class="bi bi-clock"></i></span>
             <h3 class="h6">2. Size uygun saati seçin</h3>
-            <p class="small text-body-secondary mb-0">Boş saatler gün gün listelenir. Uygun saat yoksa bekleme listesine yazılın; bir randevu iptal edildiğinde size haber verelim.</p>
+            <p class="small text-body-secondary mb-0">Boş saatler gün gün listelenir. Uygun saat yoksa bekleme listesine yazılın; bir randevu iptal edildiğinde size bildirim gönderelim.</p>
         </div></div>
     </div>
     <div class="col-md-4">
         <div class="card h-100"><div class="card-body">
             <span class="feature-icon"><i class="bi bi-chat-dots"></i></span>
             <h3 class="h6">3. Randevunuza gelin</h3>
-            <p class="small text-body-secondary mb-0">Randevu kodunuz SMS ile gelir, bir gün önce hatırlatılır. Gelemeyecekseniz lütfen iptal edin; boşalan saat başka bir hastaya verilir.</p>
+            <p class="small text-body-secondary mb-0">Randevu kodunuz ve bir gün önceki hatırlatma "Bildirimlerim" bölümünüze düşer. Gelemeyecekseniz lütfen iptal edin; boşalan saat başka bir hastaya verilir.</p>
         </div></div>
     </div>
 </div>

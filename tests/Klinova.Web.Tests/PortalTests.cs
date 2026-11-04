@@ -79,6 +79,15 @@ public sealed partial class PortalTests(KlinovaWebFactory factory) : IClassFixtu
         Assert.Contains("Randevunuz oluşturuldu", appointments, StringComparison.Ordinal);
         Assert.Contains("Dahiliye", appointments, StringComparison.Ordinal);
         Assert.Contains("Kontrol", appointments, StringComparison.Ordinal);
+
+        // Without an SMS provider the confirmation is delivered to the portal inbox.
+        var home = await (await client.GetAsync("/Portal")).Content.ReadAsStringAsync();
+        Assert.Contains("Yeni bildirimleriniz", home, StringComparison.Ordinal);
+        var inbox = await (await client.GetAsync("/Portal/Notifications")).Content.ReadAsStringAsync();
+        Assert.Contains("Randevu onayı", inbox, StringComparison.Ordinal);
+        Assert.Contains("Randevu kodu", inbox, StringComparison.Ordinal);
+        var afterReading = await (await client.GetAsync("/Portal")).Content.ReadAsStringAsync();
+        Assert.DoesNotContain("Yeni bildirimleriniz", afterReading, StringComparison.Ordinal);
     }
 
     [Fact]
