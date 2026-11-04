@@ -1,0 +1,23 @@
+@page
+@model Klinova.Web.Pages.Patients.CreateModel
+@{
+    ViewData["Title"] = "Yeni Hasta Kaydı";
+}
+<partial name="_PageHeader" model='new PageHeaderModel("Yeni Hasta Kaydı", "Zorunlu alanlar * ile işaretlenmiştir. T.C. Kimlik No girilirse doğrulanır ve mükerrer kayıt engellenir.")' />
+
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+    <partial name="_PatientForm" model="Model.Input" />
+    <div class="d-flex flex-wrap gap-3 align-items-center">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Kaydet</button>
+        <div class="form-check">
+            <input asp-for="AdmitAfterSave" class="form-check-input" />
+            <label asp-for="AdmitAfterSave" class="form-check-label">Kayıttan sonra poliklinik kabulüne geç</label>
+        </div>
+        <a asp-page="Index" class="btn btn-link ms-auto">Vazgeç</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

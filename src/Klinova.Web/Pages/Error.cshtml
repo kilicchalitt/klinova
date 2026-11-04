@@ -1,0 +1,24 @@
+@page
+@model ErrorModel
+@{
+    var (title, message, icon) = Model.StatusCodeValue switch
+    {
+        404 => ("Sayfa bulunamadı", "Aradığınız kayıt veya sayfa mevcut değil ya da kaldırılmış olabilir.", "bi-search"),
+        403 => ("Erişim engellendi", "Bu işlem için yetkiniz bulunmuyor.", "bi-shield-lock"),
+        400 => ("Geçersiz istek", "İstek işlenemedi. Sayfayı yenileyip tekrar deneyin.", "bi-exclamation-octagon"),
+        _ => ("Beklenmeyen bir hata oluştu", "İşleminiz tamamlanamadı. Sorun devam ederse sistem yöneticinize aşağıdaki referans numarasını iletin.", "bi-bug"),
+    };
+    ViewData["Title"] = title;
+}
+<div class="card @(User.Identity?.IsAuthenticated == true ? "" : "auth-card")">
+    <div class="empty-state">
+        <i class="bi @icon"></i>
+        <h1 class="h4">@title</h1>
+        <p>@message</p>
+        @if (Model.StatusCodeValue >= 500 && !string.IsNullOrEmpty(Model.RequestId))
+        {
+            <p class="small">Referans: <code>@Model.RequestId</code></p>
+        }
+        <a href="/" class="btn btn-primary">Ana sayfaya dön</a>
+    </div>
+</div>

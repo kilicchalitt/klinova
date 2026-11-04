@@ -1,0 +1,88 @@
+@page "{patientId:int}"
+@model Klinova.Web.Pages.Visits.AdmitModel
+@{
+    ViewData["Title"] = "Poliklinik Kabul";
+    var p = Model.Patient;
+}
+<partial name="_PageHeader" model='new PageHeaderModel("Poliklinik Kabul", $"{p.FullName} · Dosya No {p.FileNumber}")' />
+
+@if (!string.IsNullOrWhiteSpace(p.MedicalAlerts))
+{
+    <div class="alert alert-medical"><i class="bi bi-exclamation-octagon-fill me-2"></i><strong>Tıbbi uyarı:</strong> @p.MedicalAlerts</div>
+}
+
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header"><i class="bi bi-hospital me-2"></i>Poliklinik ve Hekim</div>
+                <div class="card-body row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Input.PolyclinicId" class="form-label required-mark"></label>
+                        <select asp-for="Input.PolyclinicId" class="form-select" autofocus>
+                            <option value="0">Seçiniz…</option>
+                            @foreach (var pol in Model.Polyclinics)
+                            {
+                                <option value="@pol.Id">@pol.Name@(string.IsNullOrEmpty(pol.Location) ? "" : $" ({pol.Location})")</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Input.PolyclinicId" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Input.DoctorId" class="form-label"></label>
+                        <select asp-for="Input.DoctorId" class="form-select">
+                            <option value="">Sıradaki uygun hekim</option>
+                            @foreach (var group in Model.Doctors.GroupBy(d => d.PolyclinicName))
+                            {
+                                <optgroup label="@group.Key">
+                                    @foreach (var d in group)
+                                    {
+                                        <option value="@d.Id">@d.FullName</option>
+                                    }
+                                </optgroup>
+                            }
+                        </select>
+                        <div class="form-text">Hekim, seçilen poliklinikte görevli olmalıdır.</div>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Input.Complaint" class="form-label"></label>
+                        <textarea asp-for="Input.Complaint" class="form-control" rows="3" placeholder="Hastanın başvuru nedeni"></textarea>
+                        <span asp-validation-for="Input.Complaint" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header"><i class="bi bi-tags me-2"></i>Başlangıç Hizmetleri</div>
+                <div class="card-body">
+                    @foreach (var group in Model.Services.GroupBy(s => s.Category ?? "Diğer"))
+                    {
+                        <div class="small text-body-secondary fw-semibold mt-2 mb-1">@group.Key</div>
+                        @foreach (var s in group)
+                        {
+                            <div class="form-check d-flex justify-content-between">
+                                <span>
+                                    <input class="form-check-input" type="checkbox" name="Input.ServiceIds" value="@s.Id" id="svc-@s.Id" checked="@Model.Input.ServiceIds.Contains(s.Id)" />
+                                    <label class="form-check-label" for="svc-@s.Id">@s.Name</label>
+                                </span>
+                                <span class="font-monospace-num text-body-secondary">@s.UnitPrice.Money()</span>
+                            </div>
+                        }
+                    }
+                    <div class="form-text mt-2">Muayene sırasında hekim tarafından ek hizmet eklenebilir.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mt-3">
+        <button type="submit" name="printSlip" value="true" class="btn btn-primary"><i class="bi bi-printer me-1"></i>Kabul Et ve Sıra Fişi Yazdır</button>
+        <button type="submit" name="printSlip" value="false" class="btn btn-outline-primary"><i class="bi bi-check2 me-1"></i>Kabul Et</button>
+        <a asp-page="/Patients/Details" asp-route-id="@p.Id" class="btn btn-link">Vazgeç</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

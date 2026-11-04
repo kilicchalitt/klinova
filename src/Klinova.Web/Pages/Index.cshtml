@@ -1,0 +1,98 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Gösterge Paneli";
+    var s = Model.Summary;
+    var canAdmit = User.IsInAnyRole(Roles.Admin, Roles.Reception);
+    var canSeeMoney = User.IsInAnyRole(Roles.Admin, Roles.Cashier, Roles.Reception);
+}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Hoş geldiniz, @User.DisplayName()</h1>
+        <p class="page-subtitle">Bugünün özeti · @s.Day.ShortDate()</p>
+    </div>
+    <div class="d-flex gap-2">
+        @if (canAdmit)
+        {
+            <a asp-page="/Patients/Create" class="btn btn-outline-primary"><i class="bi bi-person-plus me-1"></i>Yeni Hasta</a>
+            <a asp-page="/Patients/Index" class="btn btn-primary"><i class="bi bi-clipboard-plus me-1"></i>Hasta Kabul</a>
+        }
+        @if (User.IsInRole(Roles.Physician))
+        {
+            <a asp-page="/Worklist/Index" class="btn btn-primary"><i class="bi bi-person-badge me-1"></i>Muayene Listem</a>
+        }
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card">
+            <span class="stat-icon brand"><i class="bi bi-clipboard2-pulse"></i></span>
+            <div><div class="stat-value">@s.TotalVisits</div><div class="stat-label">Bugünkü başvuru</div></div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card">
+            <span class="stat-icon warning"><i class="bi bi-hourglass-split"></i></span>
+            <div><div class="stat-value">@s.Waiting</div><div class="stat-label">Sırada bekleyen · @s.InExamination muayenede</div></div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card">
+            <span class="stat-icon success"><i class="bi bi-check2-circle"></i></span>
+            <div><div class="stat-value">@s.Completed</div><div class="stat-label">Tamamlanan · @s.NewPatients yeni hasta</div></div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card">
+            <span class="stat-icon info"><i class="bi bi-cash-stack"></i></span>
+            <div>
+                @if (canSeeMoney)
+                {
+                    <div class="stat-value">@s.CollectedToday.Money()</div>
+                    <div class="stat-label">Bugünkü tahsilat · @s.OutstandingPayments bekleyen</div>
+                }
+                else
+                {
+                    <div class="stat-value">@s.Cancelled</div>
+                    <div class="stat-label">İptal edilen başvuru</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-hospital me-2"></i>Poliklinik Yoğunluğu</span>
+        <a asp-page="/Visits/Index" class="small">Tüm başvurular <i class="bi bi-arrow-right"></i></a>
+    </div>
+    @if (s.Polyclinics.Count == 0)
+    {
+        <div class="empty-state"><i class="bi bi-hospital"></i>Aktif poliklinik yok.</div>
+    }
+    else
+    {
+        var max = Math.Max(1, s.Polyclinics.Max(p => p.Waiting + p.InExamination + p.Completed));
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr><th>Poliklinik</th><th class="text-center">Sırada</th><th class="text-center">Muayenede</th><th class="text-center">Tamamlanan</th><th class="w-25">Yoğunluk</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in s.Polyclinics)
+                    {
+                        var total = p.Waiting + p.InExamination + p.Completed;
+                        <tr data-href="@Url.Page("/Visits/Index", new { polyclinicId = p.PolyclinicId })">
+                            <td class="fw-medium">@p.Name</td>
+                            <td class="text-center">@if (p.Waiting > 0) { <span class="badge text-bg-warning">@p.Waiting</span> } else { <span class="text-body-secondary">0</span> }</td>
+                            <td class="text-center">@p.InExamination</td>
+                            <td class="text-center">@p.Completed</td>
+                            <td><div class="bar-track"><div class="bar-fill" data-percent="@((total * 100 / max).ToString(CultureInfo.InvariantCulture))"></div></div></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -1,0 +1,26 @@
+# Optional overlay: run Klinova on Microsoft SQL Server instead of SQLite.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.sqlserver.yml up -d
+#
+# MSSQL_SA_PASSWORD must be set in .env (see .env.example). It is never stored
+# in this repository.
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Express
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}
+    volumes:
+      - klinova-sql:/var/opt/mssql
+
+  klinova:
+    depends_on:
+      - sqlserver
+    environment:
+      Database__Provider: SqlServer
+      ConnectionStrings__Default: "Server=sqlserver;Database=Klinova;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True"
+
+volumes:
+  klinova-sql:
