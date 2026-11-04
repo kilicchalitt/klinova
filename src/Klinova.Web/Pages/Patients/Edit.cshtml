@@ -1,0 +1,18 @@
+@page "{id:int}"
+@model Klinova.Web.Pages.Patients.EditModel
+@{
+    ViewData["Title"] = "Hasta Bilgilerini Düzenle";
+}
+<partial name="_PageHeader" model='new PageHeaderModel("Hasta Bilgilerini Düzenle", $"Dosya No {Model.FileNumber}")' />
+
+<form method="post">
+    <partial name="_PatientForm" model="Model.Input" />
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Kaydet</button>
+        <a asp-page="Details" asp-route-id="@RouteData.Values["id"]" class="btn btn-link">Vazgeç</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
