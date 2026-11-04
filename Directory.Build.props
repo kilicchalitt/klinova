@@ -17,7 +17,7 @@
     <Product>Klinova</Product>
     <Company>Klinova contributors</Company>
     <Copyright>Copyright © Klinova contributors</Copyright>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
