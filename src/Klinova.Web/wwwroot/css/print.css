@@ -16,3 +16,6 @@ body.print-body { background: #e9ecef; font-size: 13px; }
     .sheet.slip { width: 72mm; }
     @page { margin: 12mm; }
 }
+
+.print-toolbar .btn-primary { background-color: #0f766e; border-color: #0f766e; }
+.print-toolbar .btn-primary:hover { background-color: #115e59; border-color: #115e59; }
