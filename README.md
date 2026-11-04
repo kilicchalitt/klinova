@@ -203,21 +203,20 @@ KLINOVA_DEMO_PASSWORD=Deneme-Demo-1
 docker compose up -d
 ```
 
-**4. Tarayıcıda <http://localhost:8080> adresini açın.**
+**4. Tarayıcıda <http://localhost:8080> adresini açın.** Açılan sayfa **hasta portalıdır**; kurum
+uygulamasına sayfanın altındaki **Personel Girişi** bağlantısıyla geçilir.
 
-- Açılan sayfa **hasta portalıdır**. *Hesap Oluştur* ile bir test hastası oluşturup randevu alabilirsiniz
-  (test için algoritmaya uygun bir numara kullanın, örn. `10000000146`).
-- Kurum uygulaması için sayfanın altındaki **Personel Girişi** bağlantısını kullanın:
+| Nereden | Kullanıcı | Şifre | Rol |
+| --- | --- | --- | --- |
+| Hasta portalı → Giriş Yap | T.C. `10000000146` | `KLINOVA_DEMO_PASSWORD` | Hasta (randevusu ve bildirimi hazır) |
+| Personel Girişi | `admin` | `KLINOVA_ADMIN_PASSWORD` | Yönetici (ilk girişte yeni şifre istenir) |
+| Personel Girişi | `kabul` | `KLINOVA_DEMO_PASSWORD` | Hasta Kabul |
+| Personel Girişi | `hekim` | `KLINOVA_DEMO_PASSWORD` | Hekim (Dahiliye) |
+| Personel Girişi | `vezne` | `KLINOVA_DEMO_PASSWORD` | Vezne |
 
-| Kullanıcı adı | Rol | Şifre |
-| --- | --- | --- |
-| `admin` | Yönetici | `KLINOVA_ADMIN_PASSWORD` (ilk girişte değiştirmeniz istenir) |
-| `kabul` | Hasta Kabul | `KLINOVA_DEMO_PASSWORD` |
-| `hekim` | Hekim (Dahiliye) | `KLINOVA_DEMO_PASSWORD` |
-| `vezne` | Vezne | `KLINOVA_DEMO_PASSWORD` |
-
-Demo verisi iki şube (Merkez Poliklinik ve Semt Polikliniği), hafta içi çalışma takvimli hekimler
-ve örnek randevular içerir.
+Örnek akış: hasta portalından randevu alın → `kabul` ile *Randevular* ekranında görün →
+`hekim` ile muayene edin → `vezne` ile tahsilat yapıp makbuz yazdırın.
+Demo verisi iki şube, hafta içi çalışma takvimli hekimler ve örnek randevular içerir.
 
 > **Gerçek kullanım için** demo modunu kapalı tutun (`KLINOVA_DEMO_DATA=false`), uygulamayı
 > HTTPS arkasında yayınlayın, SMS/e-posta sağlayıcınızı tanımlayın ve [Kurulum Rehberi](docs/installation.md)'ndeki
@@ -236,8 +235,16 @@ cd klinova
 dotnet run --project src/Klinova.Web --launch-profile http
 ```
 
-Uygulama <http://localhost:5080> adresinde açılır. Geliştirme ortamında demo verisi otomatik
-oluşturulur; yönetici ve demo kullanıcı şifreleri konsola bir kez yazılır.
+Uygulama <http://localhost:5080> adresinde açılır; geliştirme ortamında demo verisi otomatik oluşturulur
+ve şu hazır hesaplar kullanılabilir (yalnızca yerel geliştirme içindir, `appsettings.Development.json`):
+
+| Kullanıcı | Şifre |
+| --- | --- |
+| Hasta portalı: T.C. `10000000146` | `Klinova-Demo-1` |
+| `admin` | `Klinova-Admin-1` (ilk girişte değiştirilir) |
+| `kabul`, `hekim`, `vezne` | `Klinova-Demo-1` |
+
+Baştan başlamak için `src/Klinova.Web/data` klasörünü silin.
 
 </details>
 
@@ -275,7 +282,7 @@ Güvenlik açığı bulduysanız lütfen herkese açık issue açmayın; [SECURI
 | **Veritabanı** | SQLite (varsayılan) veya SQL Server; şema migration'larla otomatik ve veri kaybetmeden güncellenir |
 | **Arka plan işleri** | Bildirim gönderimi, randevu hatırlatma, "gelmedi" işaretleme, bekleme listesi süresi |
 | **Mimari** | Katmanlı yapı: `Domain` → `Application` → `Infrastructure` → `Web` |
-| **Kalite** | 185 otomatik test (birim, entegrasyon, uçtan uca HTTP), CI, CodeQL, Dependabot |
+| **Kalite** | 186 otomatik test (birim, entegrasyon, uçtan uca HTTP), CI, CodeQL, Dependabot |
 | **Dağıtım** | Docker imajı (root olmayan kullanıcı), docker compose, IIS, systemd |
 
 Ayrıntılar: [Mimari](docs/architecture.md) · [Yapılandırma](docs/configuration.md) · [Geliştirme](docs/development.md)

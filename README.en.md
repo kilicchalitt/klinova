@@ -154,10 +154,11 @@ KLINOVA_DEMO_PASSWORD=Try-Demo-2026
 docker compose up -d
 ```
 
-Open <http://localhost:8080>: the **patient portal** opens. Create a test patient (use a number with
-valid check digits, e.g. `10000000146`) and book an appointment. Use **Personel Girişi** (staff
-sign-in) at the bottom of the page and sign in as `admin` (Admin), `kabul` (Reception),
-`hekim` (Physician) or `vezne` (Cashier).
+Open <http://localhost:8080>: the **patient portal** opens. Sign in as the demo patient
+(national id `10000000146`, password `KLINOVA_DEMO_PASSWORD`) or create your own account. Use
+**Personel Girişi** (staff sign-in) at the bottom of the page and sign in as `admin` (Admin,
+`KLINOVA_ADMIN_PASSWORD`), `kabul` (Reception), `hekim` (Physician) or `vezne` (Cashier) with
+`KLINOVA_DEMO_PASSWORD`.
 
 For production, keep demo data off, serve over HTTPS and follow the
 [installation guide](docs/installation.md) (Docker, Linux/systemd, Windows/IIS, SQL Server, backups).
@@ -173,7 +174,9 @@ Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 dotnet run --project src/Klinova.Web --launch-profile http
 ```
 
-Demo data is created in the Development environment; generated passwords are printed once to the console.
+Demo data is created in the Development environment with local-only passwords from
+`appsettings.Development.json`: `admin` / `Klinova-Admin-1`; `kabul`, `hekim`, `vezne` and the demo
+patient `10000000146` / `Klinova-Demo-1`.
 </details>
 
 ## Security & privacy
@@ -190,7 +193,7 @@ Please report vulnerabilities privately, see [SECURITY.md](SECURITY.md).
 ## Tech stack
 
 ASP.NET Core 10 (Razor Pages) · Entity Framework Core 10 (SQLite or SQL Server) ·
-ASP.NET Core Identity · Bootstrap 5 · xUnit (185 tests) · Docker · GitHub Actions, CodeQL, Dependabot.
+ASP.NET Core Identity · Bootstrap 5 · xUnit (186 tests) · Docker · GitHub Actions, CodeQL, Dependabot.
 See [architecture](docs/architecture.md) and [development guide](docs/development.md).
 
 ## Contributing
