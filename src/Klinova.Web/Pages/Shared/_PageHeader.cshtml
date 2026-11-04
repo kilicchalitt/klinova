@@ -1,0 +1,10 @@
+@model PageHeaderModel
+<div class="page-header">
+    <div>
+        <h1 class="page-title">@Model.Title</h1>
+        @if (!string.IsNullOrEmpty(Model.Subtitle))
+        {
+            <p class="page-subtitle">@Model.Subtitle</p>
+        }
+    </div>
+</div>

@@ -1,0 +1,34 @@
+@{
+    var current = ViewContext.RouteData.Values["page"] as string ?? string.Empty;
+    string Active(string prefix) => prefix == "/Index"
+        ? (current == "/Index" ? "active" : string.Empty)
+        : (current.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty);
+    var isAdmin = User.IsInRole(Roles.Admin);
+}
+<nav class="sidebar-nav">
+    <a class="nav-link @Active("/Index")" asp-page="/Index"><i class="bi bi-speedometer2"></i><span>Gösterge Paneli</span></a>
+    <a class="nav-link @Active("/Patients")" asp-page="/Patients/Index"><i class="bi bi-people"></i><span>Hastalar</span></a>
+    <a class="nav-link @Active("/Visits")" asp-page="/Visits/Index"><i class="bi bi-clipboard2-pulse"></i><span>Başvurular</span></a>
+    @if (User.IsInAnyRole(Roles.Admin, Roles.Physician))
+    {
+        <a class="nav-link @Active("/Worklist")" asp-page="/Worklist/Index"><i class="bi bi-person-badge"></i><span>Muayene Listem</span></a>
+    }
+    @if (User.IsInAnyRole(Roles.Admin, Roles.Cashier, Roles.Reception))
+    {
+        <a class="nav-link @Active("/Billing")" asp-page="/Billing/Index"><i class="bi bi-cash-coin"></i><span>Vezne</span></a>
+    }
+    @if (User.IsInAnyRole(Roles.Admin, Roles.Cashier))
+    {
+        <a class="nav-link @Active("/Reports")" asp-page="/Reports/Index"><i class="bi bi-bar-chart-line"></i><span>Raporlar</span></a>
+    }
+    @if (isAdmin)
+    {
+        <div class="nav-section">Yönetim</div>
+        <a class="nav-link @Active("/Admin/Polyclinics")" asp-page="/Admin/Polyclinics/Index"><i class="bi bi-hospital"></i><span>Poliklinikler</span></a>
+        <a class="nav-link @Active("/Admin/Doctors")" asp-page="/Admin/Doctors/Index"><i class="bi bi-person-vcard"></i><span>Hekimler</span></a>
+        <a class="nav-link @Active("/Admin/Services")" asp-page="/Admin/Services/Index"><i class="bi bi-tags"></i><span>Fiyat Listesi</span></a>
+        <a class="nav-link @Active("/Admin/Users")" asp-page="/Admin/Users/Index"><i class="bi bi-person-gear"></i><span>Kullanıcılar</span></a>
+        <a class="nav-link @Active("/Admin/Settings")" asp-page="/Admin/Settings"><i class="bi bi-building-gear"></i><span>Kurum Ayarları</span></a>
+        <a class="nav-link @Active("/Admin/AuditLogs")" asp-page="/Admin/AuditLogs"><i class="bi bi-journal-text"></i><span>İşlem Kayıtları</span></a>
+    }
+</nav>
