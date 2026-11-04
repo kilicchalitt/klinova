@@ -182,8 +182,17 @@ public sealed class VisitService(IAppDbContext db, IClock clock)
         return next.Id;
     }
 
-    public Task StartAsync(int id, int? doctorId, CancellationToken ct = default)
-        => MutateAsync(id, v => v.StartExamination(doctorId, clock.UtcNow), ct);
+    /// <summary>
+    /// Calls a waiting patient in. The physician is recorded only when they work in
+    /// the visit's polyclinic (e.g. an administrator starting the visit is not).
+    /// </summary>
+    public async Task StartAsync(int id, int? doctorId, CancellationToken ct = default)
+    {
+        var doctor = doctorId is null
+            ? null
+            : await db.Doctors.AsNoTracking().FirstOrDefaultAsync(d => d.Id == doctorId && d.IsActive, ct);
+        await MutateAsync(id, v => v.StartExamination(doctor?.PolyclinicId == v.PolyclinicId ? doctor.Id : null, clock.UtcNow), ct);
+    }
 
     public Task ReturnToQueueAsync(int id, CancellationToken ct = default)
         => MutateAsync(id, v => v.ReturnToQueue(), ct);

@@ -97,6 +97,28 @@ public sealed class VisitWorkflowTests : IDisposable
     }
 
     [Fact]
+    public async Task StartAsync_RecordsPhysicianOnlyForTheirOwnPolyclinic()
+    {
+        var (polyclinic, _, _, patient) = await _db.SeedBasicsAsync();
+        await using var ctx = _db.CreateContext();
+        var other = new Domain.Organization.Polyclinic { Name = "Göz" };
+        ctx.Polyclinics.Add(other);
+        await ctx.SaveChangesAsync();
+        var own = new Domain.Organization.Doctor { FirstName = "Ece", LastName = "Kaya", PolyclinicId = polyclinic.Id };
+        var foreign = new Domain.Organization.Doctor { FirstName = "Can", LastName = "Ak", PolyclinicId = other.Id };
+        ctx.Doctors.AddRange(own, foreign);
+        await ctx.SaveChangesAsync();
+
+        var v1 = await Visits(ctx).AdmitAsync(new AdmissionInput { PatientId = patient.Id, PolyclinicId = polyclinic.Id });
+        await Visits(ctx).StartAsync(v1.Id, foreign.Id);
+        Assert.Null((await Visits(ctx).GetDetailsAsync(v1.Id)).DoctorId);
+
+        await Visits(ctx).ReturnToQueueAsync(v1.Id);
+        await Visits(ctx).StartAsync(v1.Id, own.Id);
+        Assert.Equal(own.Id, (await Visits(ctx).GetDetailsAsync(v1.Id)).DoctorId);
+    }
+
+    [Fact]
     public async Task FullWorkflow_AdmitExamineBillAndReport()
     {
         var (polyclinic, exam, lab, patient) = await _db.SeedBasicsAsync();
