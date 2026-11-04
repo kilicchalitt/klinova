@@ -1,7 +1,10 @@
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using System.Threading.RateLimiting;
 using Klinova.Infrastructure.Identity;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.WebEncoders;
 
 namespace Klinova.Web.Infrastructure;
 
@@ -64,13 +67,17 @@ public static class WebServiceCollectionExtensions
             });
 
         // Throttle sign-in attempts per client address in addition to Identity's account lockout.
+        var loginLimit = configuration.GetValue("Klinova:LoginRequestsPerMinute", 20);
         services.AddRateLimiter(o =>
         {
             o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             o.AddPolicy("login", context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-                _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = loginLimit, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
         });
+
+        // Emit Turkish characters as-is instead of HTML entities (smaller, readable markup).
+        services.Configure<WebEncoderOptions>(o => o.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.All));
 
         services.Configure<ForwardedHeadersOptions>(o =>
         {
