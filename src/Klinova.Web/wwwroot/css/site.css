@@ -234,3 +234,58 @@ body { background: var(--kl-surface); }
 }
 .auth-card { width: 100%; max-width: 400px; border: 0; border-radius: 1rem; box-shadow: 0 20px 45px rgba(0, 0, 0, .25); }
 .auth-brand { display: flex; align-items: center; gap: .6rem; font-size: 1.5rem; font-weight: 700; color: var(--kl-brand-dark); }
+
+/* ---- Appointment slot picker ------------------------------------------ */
+
+.slot-days { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.slot-day { background: #fff; border: 1px solid rgba(0, 0, 0, .06); border-radius: .75rem; padding: .85rem; }
+.slot-day-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .5rem; padding-bottom: .5rem; border-bottom: 1px solid #eef1f2; }
+.slot-doctor { font-size: .82rem; color: #495057; font-weight: 600; margin: .5rem 0 .35rem; }
+.slot-grid { display: flex; flex-wrap: wrap; gap: .35rem; }
+.slot-btn { min-width: 4.2rem; font-variant-numeric: tabular-nums; }
+
+.step-badge {
+    display: inline-grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--kl-brand);
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 700;
+    margin-right: .5rem;
+}
+
+/* ---- Patient portal ---------------------------------------------------- */
+
+body.portal { background: var(--kl-surface); display: flex; flex-direction: column; min-height: 100vh; }
+.portal-nav { background: #fff; border-bottom: 1px solid rgba(0, 0, 0, .06); }
+.portal-nav .navbar-brand { color: var(--kl-brand-dark); }
+.portal-nav .nav-link.active { color: var(--kl-brand); font-weight: 600; }
+.portal-brand-sub { font-size: .72rem; color: #6c757d; font-weight: 400; line-height: 1; }
+.portal-main { flex: 1; padding-top: 1.75rem; padding-bottom: 2.5rem; }
+.portal-footer { background: #fff; border-top: 1px solid rgba(0, 0, 0, .06); padding: 1rem 0; font-size: .85rem; color: #6c757d; }
+.portal-footer a { color: #6c757d; }
+
+.portal-hero {
+    border-radius: 1rem;
+    padding: 2.5rem 2rem;
+    color: #fff;
+    background: linear-gradient(135deg, #0b2b30 0%, #0f766e 100%);
+}
+.portal-hero h1 { font-weight: 700; }
+.portal-hero p { color: rgba(255, 255, 255, .85); max-width: 40rem; }
+.feature-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: .75rem;
+    background: rgba(var(--kl-brand-rgb), .12);
+    color: var(--kl-brand);
+    font-size: 1.25rem;
+    margin-bottom: .75rem;
+}
+.appointment-card { border-left: 4px solid var(--kl-brand); }
+.appointment-date { font-size: 1.15rem; font-weight: 700; }

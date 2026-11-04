@@ -70,6 +70,16 @@ public sealed class PolyclinicService(IAppDbContext db)
                 .ToListAsync(ct))
             .SortBy(p => p.Name);
 
+    /// <summary>Facility and province of a polyclinic, used to pre-fill the booking wizard.</summary>
+    public async Task<(int FacilityId, string City)?> FindFacilityAsync(int polyclinicId, CancellationToken ct = default)
+    {
+        var row = await db.Polyclinics.AsNoTracking()
+            .Where(p => p.Id == polyclinicId)
+            .Select(p => new { p.FacilityId, p.Facility!.City })
+            .FirstOrDefaultAsync(ct);
+        return row is null ? null : (row.FacilityId, row.City);
+    }
+
     public async Task<PolyclinicInput> GetForEditAsync(int id, CancellationToken ct = default)
     {
         var p = await db.Polyclinics.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct)

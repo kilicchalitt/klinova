@@ -1,0 +1,42 @@
+@model SlotPickerModel
+@{
+    var tr = CultureInfo.GetCultureInfo("tr-TR");
+    var days = Model.Slots.GroupBy(s => s.Date).ToList();
+}
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <a class="btn btn-sm btn-light @(Model.PreviousUrl is null ? "disabled" : "")" href="@Model.PreviousUrl" aria-label="Önceki hafta"><i class="bi bi-chevron-left"></i> Önceki</a>
+    <span class="fw-semibold">@Model.From.ToString("d MMMM", tr) – @Model.To.ToString("d MMMM yyyy", tr)</span>
+    <a class="btn btn-sm btn-light @(Model.NextUrl is null ? "disabled" : "")" href="@Model.NextUrl" aria-label="Sonraki hafta">Sonraki <i class="bi bi-chevron-right"></i></a>
+</div>
+
+@if (days.Count == 0)
+{
+    <div class="empty-state border rounded-3 bg-white"><i class="bi bi-calendar-x"></i>Bu tarih aralığında boş randevu bulunmuyor.</div>
+}
+else
+{
+    <div class="slot-days">
+        @foreach (var day in days)
+        {
+            <div class="slot-day">
+                <div class="slot-day-header">
+                    <span class="fw-semibold">@day.Key.ToString("d MMMM", tr)</span>
+                    <span class="text-body-secondary small">@day.Key.ToString("dddd", tr) · @day.Count() boş</span>
+                </div>
+                @foreach (var doctor in day.GroupBy(s => s.DoctorName))
+                {
+                    <div class="slot-doctor">@doctor.Key</div>
+                    <div class="slot-grid">
+                        @foreach (var slot in doctor)
+                        {
+                            var value = string.Join('|', slot.DoctorId.ToString(CultureInfo.InvariantCulture), slot.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), slot.Start.ToString("HH:mm", CultureInfo.InvariantCulture));
+                            var id = "slot-" + value.Replace('|', '-').Replace(':', '-');
+                            <input type="radio" class="btn-check" name="slot" id="@id" value="@value" autocomplete="off" required />
+                            <label class="btn btn-outline-primary btn-sm slot-btn" for="@id">@slot.Start.ToString("HH:mm", CultureInfo.InvariantCulture)</label>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}

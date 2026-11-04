@@ -1,0 +1,74 @@
+@inject Klinova.Application.Settings.InstitutionService Institution
+@{
+    var institution = await Institution.GetAsync();
+    var signedIn = User.IsInRole(Roles.Patient);
+    var current = ViewContext.RouteData.Values["page"] as string ?? string.Empty;
+    string Active(string page) => current.Equals(page, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="@institution.Name online randevu ve hasta portalı" />
+    <title>@ViewData["Title"] · @institution.Name</title>
+    <link rel="icon" href="~/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="portal">
+    <nav class="navbar navbar-expand-md portal-nav">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" asp-page="/Portal/Index">
+                <span class="brand-mark" aria-hidden="true"><i class="bi bi-heart-pulse-fill"></i></span>
+                <span><span class="fw-bold">@institution.Name</span><small class="d-block portal-brand-sub">Hasta Portalı · Online Randevu</small></span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#portalNav" aria-controls="portalNav" aria-expanded="false" aria-label="Menü">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="portalNav">
+                <ul class="navbar-nav ms-auto align-items-md-center gap-md-1">
+                    <li class="nav-item"><a class="nav-link @Active("/Portal/Book")" asp-page="/Portal/Book"><i class="bi bi-calendar-plus me-1"></i>Randevu Al</a></li>
+                    @if (signedIn)
+                    {
+                        <li class="nav-item"><a class="nav-link @Active("/Portal/Appointments")" asp-page="/Portal/Appointments"><i class="bi bi-calendar-check me-1"></i>Randevularım</a></li>
+                        <li class="nav-item"><a class="nav-link @Active("/Portal/Profile")" asp-page="/Portal/Profile"><i class="bi bi-person-circle me-1"></i>@User.DisplayName()</a></li>
+                        <li class="nav-item">
+                            <form method="post" asp-page="/Account/Logout" class="d-inline">
+                                <button type="submit" class="btn btn-link nav-link"><i class="bi bi-box-arrow-right me-1"></i>Çıkış</button>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-page="/Portal/Login">Giriş Yap</a></li>
+                        <li class="nav-item"><a class="btn btn-primary btn-sm ms-md-2" asp-page="/Portal/Register">Hesap Oluştur</a></li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container portal-main">
+        <partial name="_Alerts" />
+        @RenderBody()
+    </main>
+
+    <footer class="portal-footer">
+        <div class="container d-flex flex-wrap justify-content-between gap-2">
+            <span>@institution.Name @(string.IsNullOrEmpty(institution.Phone) ? "" : $"· {institution.Phone}")</span>
+            <span class="d-flex gap-3">
+                <a asp-page="/Portal/Privacy">Aydınlatma Metni</a>
+                <a asp-page="/Account/Login">Personel Girişi</a>
+                <span>Klinova</span>
+            </span>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

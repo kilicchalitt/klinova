@@ -1,0 +1,93 @@
+@page
+@model Klinova.Web.Pages.Portal.IndexModel
+@{
+    ViewData["Title"] = "Online Randevu";
+    var tr = CultureInfo.GetCultureInfo("tr-TR");
+}
+<section class="portal-hero mb-4">
+    @if (Model.PatientName is not null)
+    {
+        <h1 class="h2">Merhaba @Model.PatientName,</h1>
+        <p class="mb-4">Buradan randevu alabilir, randevularınızı değiştirebilir veya iptal edebilirsiniz.</p>
+    }
+    else
+    {
+        <h1 class="h2">Online randevu artık çok kolay</h1>
+        <p class="mb-4">İl ve kurum seçin, polikliniğinizi ve hekiminizi belirleyin, size uygun saati seçin. Randevu bilgileriniz SMS ile gönderilir, randevu gününden önce hatırlatılır.</p>
+    }
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-page="Book" class="btn btn-light btn-lg"><i class="bi bi-calendar-plus me-2"></i>Randevu Al</a>
+        @if (Model.PatientName is not null)
+        {
+            <a asp-page="Appointments" class="btn btn-outline-light btn-lg"><i class="bi bi-calendar-check me-2"></i>Randevularım</a>
+        }
+        else
+        {
+            <a asp-page="Login" class="btn btn-outline-light btn-lg">Giriş Yap</a>
+        }
+    </div>
+</section>
+
+@if (Model.Upcoming.Count > 0)
+{
+    <h2 class="h5 mb-3">Yaklaşan randevularınız</h2>
+    <div class="row g-3 mb-4">
+        @foreach (var a in Model.Upcoming.Take(3))
+        {
+            <div class="col-md-4">
+                <div class="card appointment-card h-100">
+                    <div class="card-body">
+                        <div class="appointment-date">@a.Date.ToString("d MMMM yyyy", tr) · @a.StartTime.ToString("HH:mm", CultureInfo.InvariantCulture)</div>
+                        <div class="text-body-secondary small mb-2">@a.Date.ToString("dddd", tr)</div>
+                        <div class="fw-medium">@a.PolyclinicName</div>
+                        <div>@a.DoctorName</div>
+                        <div class="small text-body-secondary">@a.FacilityName · Randevu kodu <span class="font-monospace-num">@a.ConfirmationCode</span></div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100"><div class="card-body">
+            <span class="feature-icon"><i class="bi bi-geo-alt"></i></span>
+            <h3 class="h6">1. Kurum ve poliklinik seçin</h3>
+            <p class="small text-body-secondary mb-0">İl, kurum ve poliklinik seçerek başlayın. Belirli bir hekim seçebilir ya da "Fark etmez" diyerek en erken saati görebilirsiniz.</p>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100"><div class="card-body">
+            <span class="feature-icon"><i class="bi bi-clock"></i></span>
+            <h3 class="h6">2. Size uygun saati seçin</h3>
+            <p class="small text-body-secondary mb-0">Boş saatler gün gün listelenir. Uygun saat yoksa bekleme listesine yazılın; bir randevu iptal edildiğinde size haber verelim.</p>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100"><div class="card-body">
+            <span class="feature-icon"><i class="bi bi-chat-dots"></i></span>
+            <h3 class="h6">3. Randevunuza gelin</h3>
+            <p class="small text-body-secondary mb-0">Randevu kodunuz SMS ile gelir, bir gün önce hatırlatılır. Gelemeyecekseniz lütfen iptal edin; boşalan saat başka bir hastaya verilir.</p>
+        </div></div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><i class="bi bi-hospital me-2"></i>Hizmet veren kurumlarımız</div>
+    <ul class="list-group list-group-flush">
+        @foreach (var f in Model.Facilities)
+        {
+            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
+                <span><span class="fw-medium">@f.Name</span> <span class="text-body-secondary">· @f.District / @f.City</span></span>
+                <span class="small text-body-secondary">@f.Address @(string.IsNullOrEmpty(f.Phone) ? "" : $"· {f.Phone}")</span>
+            </li>
+        }
+    </ul>
+</div>
+
+<div class="alert alert-info small">
+    <i class="bi bi-info-circle me-1"></i>
+    Randevusuna gelmeyen ve randevusunu iptal etmeyen hastalar, aynı poliklinikten belirli bir süre online randevu alamaz.
+    Acil durumlarda randevu beklemeden en yakın acil servise başvurunuz.
+</div>
