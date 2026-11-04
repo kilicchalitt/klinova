@@ -1,0 +1,97 @@
+@page
+@model Klinova.Web.Pages.Worklist.IndexModel
+@{
+    ViewData["Title"] = "Muayene Listem";
+}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Muayene Listem</h1>
+        <p class="page-subtitle">
+            @(Model.CurrentDoctor?.FullName ?? User.DisplayName()) · @Clock.Today.ShortDate()
+            @if (Model.CurrentDoctor is null && User.IsInRole(Roles.Physician))
+            {
+                <span class="text-warning ms-1"><i class="bi bi-info-circle"></i> Hesabınız bir hekim kaydına bağlı değil; yöneticinizden bağlamasını isteyin.</span>
+            }
+        </p>
+    </div>
+    <form method="get" class="d-flex gap-2">
+        <select name="polyclinicId" class="form-select" data-autosubmit aria-label="Poliklinik">
+            @foreach (var p in Model.Polyclinics)
+            {
+                <option value="@p.Id" selected="@(p.Id == Model.PolyclinicId)">@p.Name</option>
+            }
+        </select>
+    </form>
+</div>
+
+@if (Model.PolyclinicId is { } polyclinicId)
+{
+    <div class="row g-3">
+        <div class="col-lg-5">
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-hourglass-split me-2"></i>Sırada (@Model.Waiting.Count)</span>
+                    <form method="post" asp-page-handler="CallNext">
+                        <input type="hidden" name="polyclinicId" value="@polyclinicId" />
+                        <button type="submit" class="btn btn-primary btn-sm" disabled="@(Model.Waiting.Count == 0)"><i class="bi bi-megaphone me-1"></i>Sıradaki Hastayı Çağır</button>
+                    </form>
+                </div>
+                <ul class="list-group list-group-flush">
+                    @if (Model.Waiting.Count == 0)
+                    {
+                        <li class="list-group-item empty-state"><i class="bi bi-cup-hot"></i>Bekleyen hasta yok.</li>
+                    }
+                    @foreach (var v in Model.Waiting)
+                    {
+                        <li class="list-group-item d-flex align-items-center gap-3">
+                            <span class="queue-number">@v.QueueNumber</span>
+                            <div class="flex-grow-1">
+                                <a asp-page="/Visits/Details" asp-route-id="@v.Id" class="fw-medium text-reset">@v.PatientName</a>
+                                @if (!string.IsNullOrWhiteSpace(v.MedicalAlerts)) { <i class="bi bi-exclamation-octagon-fill text-danger ms-1" title="@v.MedicalAlerts"></i> }
+                                <div class="small text-body-secondary">Geliş @Clock.ToLocal(v.CheckInAtUtc).ToString("HH:mm", CultureInfo.InvariantCulture) @(v.DoctorName is null ? "" : $"· {v.DoctorName}")</div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card mb-3">
+                <div class="card-header"><i class="bi bi-door-open me-2"></i>Muayenede (@Model.InExamination.Count)</div>
+                <ul class="list-group list-group-flush">
+                    @if (Model.InExamination.Count == 0)
+                    {
+                        <li class="list-group-item text-body-secondary small">Şu anda muayenede hasta yok.</li>
+                    }
+                    @foreach (var v in Model.InExamination)
+                    {
+                        <li class="list-group-item d-flex align-items-center gap-3">
+                            <span class="queue-number">@v.QueueNumber</span>
+                            <div class="flex-grow-1">
+                                <span class="fw-medium">@v.PatientName</span>
+                                @if (!string.IsNullOrWhiteSpace(v.MedicalAlerts)) { <div class="small text-danger"><i class="bi bi-exclamation-octagon-fill me-1"></i>@v.MedicalAlerts</div> }
+                            </div>
+                            <a asp-page="/Visits/Details" asp-route-id="@v.Id" class="btn btn-primary btn-sm">Muayeneye Devam</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+            <div class="card">
+                <div class="card-header"><i class="bi bi-check2-circle me-2"></i>Bugün Tamamlanan (@Model.Completed.Count)</div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var v in Model.Completed)
+                    {
+                        <li class="list-group-item d-flex justify-content-between">
+                            <a asp-page="/Visits/Details" asp-route-id="@v.Id" class="text-reset">@v.QueueNumber · @v.PatientName</a>
+                            <span class="small text-body-secondary">@v.DoctorName.OrDash()</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card"><div class="empty-state"><i class="bi bi-hospital"></i>Aktif poliklinik bulunmuyor.</div></div>
+}
