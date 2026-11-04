@@ -31,7 +31,7 @@ cd klinova
 cp .env.example .env
 ```
 
-`.env` dosyasını düzenleyin (en azından `KLINOVA_ADMIN_PASSWORD` belirlemeniz önerilir),
+`.env` dosyasını düzenleyin (`KLINOVA_ADMIN_PASSWORD` **zorunludur**),
 ardından:
 
 ```bash
@@ -144,8 +144,8 @@ aksi halde istemci IP'si ve HTTPS bilgisi uygulamaya doğru aktarılmaz.
 ## İlk Giriş
 
 1. Kullanıcı adı `admin` (veya `Klinova:Seed:AdminUserName`).
-2. Şifre: yapılandırmada verdiğiniz değer ya da ilk açılışta loga yazılan geçici şifre
-   (`Temporary password` satırı).
+2. Şifre: yapılandırmada verdiğiniz değer (`Klinova__Seed__AdminPassword` / `KLINOVA_ADMIN_PASSWORD`).
+   Bu değer zorunludur; verilmezse uygulama ne yapılması gerektiğini söyleyen bir mesajla durur.
 3. Sistem sizden yeni bir şifre belirlemenizi ister.
 4. **Kurum Ayarları**'ndan kurum adını, adresini ve makbuz notunu girin.
 5. **Kurumlar ve Şubeler**'de varsayılan şubenin adını, ilini ve ilçesini düzenleyin; varsa diğer

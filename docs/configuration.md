@@ -100,9 +100,9 @@ içerebileceği için yalnızca `Debug` düzeyinde loglanır.
 | --- | --- | --- |
 | `Klinova:Seed:AdminUserName` | `admin` | Hiç yönetici yoksa oluşturulacak hesabın kullanıcı adı. |
 | `Klinova:Seed:AdminEmail` | `admin@klinova.local` | |
-| `Klinova:Seed:AdminPassword` | *(boş)* | Boşsa güçlü bir şifre rastgele üretilir ve **bir kez** loga yazılır. Her durumda ilk girişte değiştirilmesi zorunludur. |
+| `Klinova:Seed:AdminPassword` | *(boş)* | **Henüz yönetici yoksa zorunludur;** verilmezse uygulama açıklayıcı bir mesajla durur. Şifre hiçbir yere loglanmaz ve ilk girişte değiştirilmesi zorunludur. Yönetici oluşturulduktan sonra bu ayarı kaldırabilirsiniz. |
 | `Klinova:Seed:DemoData` | `false` (Development'ta `true`) | Örnek şubeler, hekimler, hastalar, randevular, `kabul`, `hekim`, `vezne` demo kullanıcıları ve T.C. `10000000146` ile hasta portalı hesabı. Üretimde kapalı tutun. |
-| `Klinova:Seed:DemoPassword` | *(boş)* | Demo kullanıcıların ortak şifresi; boşsa rastgele üretilir ve loga yazılır. |
+| `Klinova:Seed:DemoPassword` | *(boş)* | Demo kullanıcıların ve demo hastanın ortak şifresi; demo verisi açıksa zorunludur. |
 
 Varsayılan kurum (şube), poliklinikler, fiyat listesi ve içinde bulunulan ile sonraki yılın sabit tarihli
 millî bayramları, ilgili tablolar boşsa her ortamda oluşturulur. Demo verisi ayrıca ikinci bir şube,

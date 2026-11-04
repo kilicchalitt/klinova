@@ -261,7 +261,7 @@ Baştan başlamak için `src/Klinova.Web/data` klasörünü silin.
 
 Sağlık verisi, KVKK kapsamında **özel nitelikli kişisel veridir**. Klinova bu sorumluluk gözetilerek tasarlandı:
 
-- 🔐 **Varsayılan şifre yok.** İlk yönetici şifresi kurulumda belirlenir veya rastgele üretilir; ilk girişte değiştirilmesi zorunludur.
+- 🔐 **Varsayılan şifre yok.** İlk yönetici şifresi kurulumda belirlenmek zorundadır, hiçbir log'a yazılmaz ve ilk girişte değiştirilmesi zorunludur.
 - 🔒 Şifreler geri döndürülemez şekilde (hash) saklanır. 5 hatalı denemede hesap kilitlenir, giriş ve kayıt denemeleri sınırlandırılır.
 - 🪪 **Portal hesabı ele geçirmeye karşı koruma:** T.C. Kimlik No, ad ve doğum tarihi gizli bilgi olmadığından, mevcut hasta dosyasına bağlanmak için kurumda kayıtlı telefon numarasının da eşleşmesi gerekir.
 - 👥 Rol bazlı yetkilendirme; hasta ve personel alanları birbirinden tamamen ayrıdır.

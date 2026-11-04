@@ -181,7 +181,7 @@ patient `10000000146` / `Klinova-Demo-1`.
 
 ## Security & privacy
 
-- No default credentials: the initial admin password is configured or randomly generated and must be changed at first sign-in.
+- No default credentials: the initial admin password must be configured at installation, is never logged and must be changed at first sign-in.
 - Portal accounts are linked to existing patient files only when the phone number on file matches.
 - Hashed passwords, account lockout, rate-limited sign-in, role-based authorisation with a deny-by-default policy.
 - CSRF protection, `HttpOnly` + `SameSite=Strict` cookies, HSTS and a strict Content-Security-Policy.

@@ -19,6 +19,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 - SMS and e-mail messages are only queued when the corresponding provider is configured.
 
+### Security
+
+- The initial administrator and demo passwords are no longer generated and written to the log
+  (reported by CodeQL as clear-text storage of sensitive data). The initial administrator password
+  is now required while no administrator exists; start-up stops with a clear message otherwise, and
+  `docker compose` refuses to start without `KLINOVA_ADMIN_PASSWORD`.
+
 ### Fixed
 
 - Start-up no longer logs misleading warnings (unordered `First` queries, SQLite table rebuilds,
