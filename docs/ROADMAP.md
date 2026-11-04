@@ -12,34 +12,34 @@ Status legend: ✅ done · 🚧 in progress · 🗓️ planned
 - ✅ Comprehensive `.gitignore` that blocks secrets, keys and local data.
 - ✅ Architecture decision record for the rewrite ([ADR-0001](adr/0001-rewrite-as-web-application.md)).
 
-## Phase 1 — Foundation (v1.0) 🗓️
+## Phase 1 — Foundation (v1.0) ✅
 
-- 🗓️ Layered .NET 10 solution (`Domain`, `Application`, `Infrastructure`, `Web`).
-- 🗓️ Central build configuration, analyzers, `.editorconfig`, nullable reference types.
-- 🗓️ EF Core data model with migrations for SQLite and SQL Server.
-- 🗓️ ASP.NET Core Identity with roles: *Admin*, *Reception*, *Physician*, *Cashier*.
-- 🗓️ Forced password change for seeded accounts, account lockout.
-- 🗓️ Automatic audit trail of every create / update / delete.
+- ✅ Layered .NET 10 solution (`Domain`, `Application`, `Infrastructure`, `Web`).
+- ✅ Central build configuration, analyzers, `.editorconfig`, nullable reference types.
+- ✅ EF Core data model with migrations for SQLite and SQL Server.
+- ✅ ASP.NET Core Identity with roles: *Admin*, *Reception*, *Physician*, *Cashier*.
+- ✅ Forced password change for seeded accounts, account lockout.
+- ✅ Automatic audit trail of every create / update / delete.
 
-## Phase 2 — Core clinical workflow (v1.0) 🗓️
+## Phase 2 — Core clinical workflow (v1.0) ✅
 
-- 🗓️ Patient registry with Turkish national ID (T.C. Kimlik No) checksum validation,
+- ✅ Patient registry with Turkish national ID (T.C. Kimlik No) checksum validation,
   duplicate detection, search and paging.
-- 🗓️ Polyclinic, physician and medical-service (price list) management.
-- 🗓️ Patient admission to a polyclinic with a daily queue number per polyclinic.
-- 🗓️ Physician work list: call the next patient, record complaint, diagnosis and notes,
+- ✅ Polyclinic, physician and medical-service (price list) management.
+- ✅ Patient admission to a polyclinic with a daily queue number per polyclinic.
+- ✅ Physician work list: call the next patient, record complaint, diagnosis and notes,
   add procedures, complete the examination.
-- 🗓️ Billing: collect payment with discount and payment method, printable receipt.
-- 🗓️ Dashboard with today's figures; revenue reports by polyclinic, physician and
+- ✅ Billing: collect payment with discount and payment method, printable receipt.
+- ✅ Dashboard with today's figures; revenue reports by polyclinic, physician and
   service with CSV export.
-- 🗓️ Institution settings (name, address, receipt footer) editable by administrators.
+- ✅ Institution settings (name, address, receipt footer) editable by administrators.
 
-## Phase 3 — Operations & quality (v1.0) 🗓️
+## Phase 3 — Operations & quality (v1.0) ✅
 
-- 🗓️ Unit and integration test suites, GitHub Actions CI.
-- 🗓️ Docker image and `docker compose` setup with persistent volumes.
-- 🗓️ Health check endpoint, security headers, HTTPS/HSTS, anti-forgery protection.
-- 🗓️ Contributor documentation, security policy, issue and pull-request templates.
+- ✅ Unit and integration test suites, GitHub Actions CI.
+- ✅ Docker image and `docker compose` setup with persistent volumes.
+- ✅ Health check endpoint, security headers, HTTPS/HSTS, anti-forgery protection.
+- ✅ Contributor documentation, security policy, issue and pull-request templates.
 
 ## Phase 4 — Next releases 🗓️
 
