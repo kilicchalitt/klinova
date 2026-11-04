@@ -1,0 +1,228 @@
+@page "{id:int}"
+@model Klinova.Web.Pages.Visits.DetailsModel
+@{
+    var v = Model.Visit;
+    var p = v.Patient!;
+    ViewData["Title"] = $"Başvuru · {p.FullName}";
+    var editableItems = !v.IsPaid && v.Status != VisitStatus.Cancelled && Model.CanManageFlow;
+    var age = p.AgeOn(Clock.Today);
+}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-3">
+        <span class="queue-number fs-4">@v.QueueNumber</span>
+        <div>
+            <h1 class="page-title"><a asp-page="/Patients/Details" asp-route-id="@p.Id" class="text-reset text-decoration-none">@p.FullName</a></h1>
+            <p class="page-subtitle">
+                Dosya No <span class="font-monospace-num">@p.FileNumber</span>@(age is null ? "" : $" · {age} yaş") · @p.Gender.DisplayName()
+                · @v.Polyclinic!.Name · @v.VisitDate.ShortDate()
+            </p>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <partial name="_StatusBadge" model="v.Status" />
+        <a asp-page="Slip" asp-route-id="@v.Id" class="btn btn-sm btn-light"><i class="bi bi-printer me-1"></i>Sıra Fişi</a>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(p.MedicalAlerts))
+{
+    <div class="alert alert-medical"><i class="bi bi-exclamation-octagon-fill me-2"></i><strong>Tıbbi uyarı:</strong> @p.MedicalAlerts</div>
+}
+@if (v.Status == VisitStatus.Cancelled)
+{
+    <div class="alert alert-secondary"><i class="bi bi-x-circle me-2"></i>Bu başvuru iptal edildi. Neden: @v.CancellationReason</div>
+}
+
+<div class="row g-3">
+    <div class="col-xl-8">
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-stethoscope me-2"></i>Muayene</span>
+                <span class="small text-body-secondary">Hekim: @(v.Doctor?.FullName ?? "Atanmadı")</span>
+            </div>
+            <div class="card-body">
+                @if (Model.CanExamine && v.Status != VisitStatus.Cancelled)
+                {
+                    <form method="post" asp-page-handler="Examination" asp-route-id="@v.Id">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                        <div class="mb-3">
+                            <label asp-for="Examination.Complaint" class="form-label"></label>
+                            <textarea asp-for="Examination.Complaint" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Examination.Complaint" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Examination.Diagnosis" class="form-label"></label>
+                            <input asp-for="Examination.Diagnosis" class="form-control" placeholder="Örn. J06.9 Akut üst solunum yolu enfeksiyonu" />
+                            <span asp-validation-for="Examination.Diagnosis" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Examination.Notes" class="form-label"></label>
+                            <textarea asp-for="Examination.Notes" class="form-control" rows="4" placeholder="Bulgular, tedavi planı, öneriler"></textarea>
+                            <span asp-validation-for="Examination.Notes" class="text-danger small"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Muayene Bilgilerini Kaydet</button>
+                    </form>
+                }
+                else
+                {
+                    <dl class="dl-compact mb-0">
+                        <dt>Şikâyet</dt><dd>@v.Complaint.OrDash()</dd>
+                        @if (Model.CanExamine || User.IsInRole(Roles.Reception))
+                        {
+                            <dt>Tanı</dt><dd>@v.Diagnosis.OrDash()</dd>
+                        }
+                        @if (Model.CanExamine)
+                        {
+                            <dt>Muayene Notları</dt><dd>@v.ExaminationNotes.OrDash()</dd>
+                        }
+                    </dl>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="bi bi-list-check me-2"></i>Hizmetler</div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>Kod</th><th>Hizmet</th><th class="text-end">Adet</th><th class="text-end">Birim Fiyat</th><th class="text-end">Tutar</th><th></th></tr></thead>
+                    <tbody>
+                        @if (v.Items.Count == 0)
+                        {
+                            <tr><td colspan="6" class="text-center text-body-secondary py-4">Henüz hizmet eklenmedi.</td></tr>
+                        }
+                        @foreach (var item in v.Items.OrderBy(i => i.Id))
+                        {
+                            <tr>
+                                <td class="font-monospace-num">@item.ServiceCode</td>
+                                <td>@item.ServiceName</td>
+                                <td class="text-end">@item.Quantity</td>
+                                <td class="text-end font-monospace-num">@item.UnitPrice.Money()</td>
+                                <td class="text-end font-monospace-num">@item.LineTotal.Money()</td>
+                                <td class="text-end">
+                                    @if (editableItems)
+                                    {
+                                        <form method="post" asp-page-handler="RemoveService" asp-route-id="@v.Id">
+                                            <input type="hidden" name="itemId" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm btn-link text-danger" data-confirm="Hizmet kaldırılsın mı?" aria-label="Kaldır"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr><th colspan="4" class="text-end">Toplam</th><th class="text-end font-monospace-num">@v.TotalAmount.Money()</th><th></th></tr>
+                    </tfoot>
+                </table>
+            </div>
+            @if (editableItems)
+            {
+                <div class="card-body border-top">
+                    <form method="post" asp-page-handler="AddService" asp-route-id="@v.Id" class="row g-2 align-items-end">
+                        <div class="col-md-7">
+                            <label class="form-label small" for="serviceId">Hizmet ekle</label>
+                            <select id="serviceId" name="serviceId" class="form-select" data-price-source="#selected-price">
+                                @foreach (var group in Model.Services.GroupBy(s => s.Category ?? "Diğer"))
+                                {
+                                    <optgroup label="@group.Key">
+                                        @foreach (var s in group)
+                                        {
+                                            <option value="@s.Id" data-price="@s.UnitPrice.Money()">@s.Code · @s.Name</option>
+                                        }
+                                    </optgroup>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label small" for="quantity">Adet</label>
+                            <input id="quantity" name="quantity" type="number" min="1" max="@Visit.MaxQuantity" value="1" class="form-control" />
+                        </div>
+                        <div class="col-6 col-md-3 d-flex align-items-center gap-2">
+                            <button type="submit" class="btn btn-outline-primary"><i class="bi bi-plus-lg me-1"></i>Ekle</button>
+                            <span id="selected-price" class="small text-body-secondary font-monospace-num"></span>
+                        </div>
+                    </form>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-diagram-3 me-2"></i>İşlemler</div>
+            <div class="card-body d-grid gap-2">
+                @if (Model.CanManageFlow)
+                {
+                    @if (v.Status == VisitStatus.Waiting)
+                    {
+                        <form method="post" asp-page-handler="Start" asp-route-id="@v.Id" class="d-grid"><button class="btn btn-primary"><i class="bi bi-door-open me-1"></i>Muayeneye Al</button></form>
+                    }
+                    @if (v.Status == VisitStatus.InExamination)
+                    {
+                        <form method="post" asp-page-handler="Complete" asp-route-id="@v.Id" class="d-grid"><button class="btn btn-success"><i class="bi bi-check2-circle me-1"></i>Muayeneyi Tamamla</button></form>
+                        <form method="post" asp-page-handler="ReturnToQueue" asp-route-id="@v.Id" class="d-grid"><button class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise me-1"></i>Sıraya Geri Al</button></form>
+                    }
+                    @if (v.Status == VisitStatus.Waiting)
+                    {
+                        <form method="post" asp-page-handler="Complete" asp-route-id="@v.Id" class="d-grid"><button class="btn btn-outline-success" data-confirm="Muayeneye alınmadan tamamlansın mı?"><i class="bi bi-check2-circle me-1"></i>Doğrudan Tamamla</button></form>
+                    }
+                    @if (v.Status == VisitStatus.Completed && !v.IsPaid)
+                    {
+                        <form method="post" asp-page-handler="Reopen" asp-route-id="@v.Id" class="d-grid"><button class="btn btn-outline-secondary"><i class="bi bi-unlock me-1"></i>Yeniden Aç</button></form>
+                    }
+                }
+                @if (Model.CanCollect && v.Status == VisitStatus.Completed && !v.IsPaid && v.Items.Count > 0)
+                {
+                    <a asp-page="/Billing/Pay" asp-route-visitId="@v.Id" class="btn btn-primary"><i class="bi bi-cash-coin me-1"></i>Tahsilat Yap</a>
+                }
+                @if (v.IsPaid)
+                {
+                    <div class="alert alert-success mb-0 small">
+                        <i class="bi bi-receipt me-1"></i><strong>@v.Payment!.ReceiptNumber</strong> ile @v.Payment.NetAmount.Money() tahsil edildi
+                        (@v.Payment.Method.DisplayName(), @Clock.ToLocal(v.Payment.PaidAtUtc).ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture)).
+                    </div>
+                    <a asp-page="/Billing/Receipt" asp-route-visitId="@v.Id" class="btn btn-outline-primary"><i class="bi bi-printer me-1"></i>Makbuz Yazdır</a>
+                }
+                @if (Model.CanCancel && v.IsOpen)
+                {
+                    <form method="post" asp-page-handler="Cancel" asp-route-id="@v.Id" class="border-top pt-3 mt-1">
+                        <label class="form-label small" for="reason">İptal nedeni</label>
+                        <div class="input-group">
+                            <input id="reason" name="reason" class="form-control" maxlength="200" required placeholder="Örn. Hasta ayrıldı" />
+                            <button class="btn btn-outline-danger" data-confirm="Başvuru iptal edilsin mi?">İptal Et</button>
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+
+        @if (Model.CanCancel && v.IsOpen && Model.PolyclinicDoctors.Count > 0)
+        {
+            <div class="card mb-3">
+                <div class="card-header"><i class="bi bi-person-check me-2"></i>Hekim Ata</div>
+                <div class="card-body">
+                    <form method="post" asp-page-handler="AssignDoctor" asp-route-id="@v.Id" class="input-group">
+                        <select name="doctorId" class="form-select" aria-label="Hekim">
+                            @foreach (var d in Model.PolyclinicDoctors)
+                            {
+                                <option value="@d.Id" selected="@(d.Id == v.DoctorId)">@d.Name</option>
+                            }
+                        </select>
+                        <button class="btn btn-outline-primary">Ata</button>
+                    </form>
+                </div>
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-header"><i class="bi bi-clock me-2"></i>Zaman Çizelgesi</div>
+            <div class="card-body small">
+                <dl class="dl-compact mb-0">
+                    <dt>Kabul</dt><dd>@Clock.ToLocal(v.CheckInAtUtc).ToString("HH:mm", CultureInfo.InvariantCulture) · @v.CreatedBy</dd>
+                    <dt>Muayeneye alınma</dt><dd>@(v.StartedAtUtc is { } s ? Clock.ToLocal(s).ToString("HH:mm", CultureInfo.InvariantCulture) : "—")</dd>
+                    <dt>@(v.Status == VisitStatus.Cancelled ? "İptal" : "Tamamlanma")</dt><dd>@(v.CompletedAtUtc is { } c ? Clock.ToLocal(c).ToString("HH:mm", CultureInfo.InvariantCulture) : "—")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>

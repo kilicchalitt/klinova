@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/print.css" asp-append-version="true" />
 </head>
-<body class="print-body">
+<body class="print-body" data-autoprint="@(ViewData["AutoPrint"] is true ? "" : null)">
     <div class="print-toolbar no-print">
         <button type="button" class="btn btn-primary btn-sm" data-print><i class="bi bi-printer me-1"></i>Yazdır</button>
         <a class="btn btn-outline-secondary btn-sm" href="@ViewData["BackUrl"]"><i class="bi bi-arrow-left me-1"></i>Geri</a>
