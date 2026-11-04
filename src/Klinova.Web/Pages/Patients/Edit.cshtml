@@ -6,6 +6,7 @@
 <partial name="_PageHeader" model='new PageHeaderModel("Hasta Bilgilerini Düzenle", $"Dosya No {Model.FileNumber}")' />
 
 <form method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
     <partial name="_PatientForm" model="Model.Input" />
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Kaydet</button>
