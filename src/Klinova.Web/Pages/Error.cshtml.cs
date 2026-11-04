@@ -8,13 +8,17 @@ namespace Klinova.Web.Pages;
 [IgnoreAntiforgeryToken]
 public class ErrorModel : PageModel
 {
-    public string? RequestId { get; set; }
+    public int StatusCodeValue { get; private set; } = 500;
 
-    public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+    public string? RequestId { get; private set; }
 
-    public void OnGet()
+    public void OnGet(int? statusCode) => Populate(statusCode);
+
+    public void OnPost(int? statusCode) => Populate(statusCode);
+
+    private void Populate(int? statusCode)
     {
+        StatusCodeValue = statusCode ?? 500;
         RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
     }
 }
-
