@@ -22,7 +22,7 @@
                     {
                         <tr data-href="@Url.Page("Edit", new { id = d.Id })">
                             <td class="fw-medium">@d.FullName</td>
-                            <td>@d.PolyclinicName</td>
+                            <td>@d.PolyclinicName<div class="small text-body-secondary">@d.FacilityName</div></td>
                             <td>@d.Phone.OrDash()</td>
                             <td>@if (d.UserId is null) { <span class="text-body-secondary">—</span> } else { <i class="bi bi-link-45deg text-success" title="Kullanıcı hesabına bağlı"></i> }</td>
                             <td>@if (d.IsActive) { <span class="badge text-bg-success">Aktif</span> } else { <span class="badge text-bg-secondary">Pasif</span> }</td>

@@ -170,6 +170,36 @@ public sealed class VisitWorkflowTests : IDisposable
     }
 
     [Fact]
+    public async Task RevenueReport_SeparatesSameNamedPolyclinicsOfDifferentFacilities()
+    {
+        var (polyclinic, exam, _, patient) = await _db.SeedBasicsAsync();
+        int branchPolyclinicId;
+        await using (var ctx = _db.CreateContext())
+        {
+            var branch = new Domain.Organization.Facility { Name = "Şube", City = "Konya", District = "Meram" };
+            ctx.Facilities.Add(branch);
+            await ctx.SaveChangesAsync();
+            var branchInternal = new Domain.Organization.Polyclinic { Name = polyclinic.Name, FacilityId = branch.Id };
+            ctx.Polyclinics.Add(branchInternal);
+            await ctx.SaveChangesAsync();
+            branchPolyclinicId = branchInternal.Id;
+        }
+
+        foreach (var polyclinicId in new[] { polyclinic.Id, branchPolyclinicId })
+        {
+            await using var ctx = _db.CreateContext();
+            var visit = await Visits(ctx).AdmitAsync(new AdmissionInput { PatientId = patient.Id, PolyclinicId = polyclinicId, ServiceIds = [exam.Id] });
+            await Visits(ctx).CompleteAsync(visit.Id);
+            await new BillingService(ctx, _db.Clock, _db.User, Visits(ctx)).CollectAsync(visit.Id, new PaymentInput());
+        }
+
+        await using var reportCtx = _db.CreateContext();
+        var report = await new ReportService(reportCtx, _db.Clock).GetRevenueReportAsync(_db.Clock.Today, _db.Clock.Today);
+
+        Assert.Equal(["Dahiliye — Merkez", "Dahiliye — Şube"], report.ByPolyclinic.Select(r => r.Label).Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
     public async Task Changes_AreWrittenToTheAuditLog()
     {
         var (polyclinic, _, _, patient) = await _db.SeedBasicsAsync();

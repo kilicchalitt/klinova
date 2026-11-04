@@ -48,7 +48,7 @@ public sealed class DoctorInput
     public bool IsActive { get; set; } = true;
 }
 
-public sealed record DoctorListItem(int Id, string FullName, int PolyclinicId, string PolyclinicName, string? Phone, string? UserId, bool IsActive);
+public sealed record DoctorListItem(int Id, string FullName, int PolyclinicId, string PolyclinicName, string? Phone, string? UserId, bool IsActive, string FacilityName = "");
 
 /// <summary>Maintains physicians and their polyclinic assignments.</summary>
 public sealed class DoctorService(IAppDbContext db)
@@ -57,14 +57,15 @@ public sealed class DoctorService(IAppDbContext db)
     {
         var rows = await db.Doctors.AsNoTracking()
             .Where(d => polyclinicId == null || d.PolyclinicId == polyclinicId)
-            .Select(d => new { d.Id, d.Title, d.FirstName, d.LastName, d.PolyclinicId, PolyclinicName = d.Polyclinic!.Name, d.Phone, d.UserId, d.IsActive })
+            .Select(d => new { d.Id, d.Title, d.FirstName, d.LastName, d.PolyclinicId, PolyclinicName = d.Polyclinic!.Name, FacilityName = d.Polyclinic.Facility!.Name, d.Phone, d.UserId, d.IsActive })
             .ToListAsync(ct);
 
         return rows
-            .OrderBy(d => d.PolyclinicName, TurkishCollation.Comparer)
+            .OrderBy(d => d.FacilityName, TurkishCollation.Comparer)
+            .ThenBy(d => d.PolyclinicName, TurkishCollation.Comparer)
             .ThenBy(d => d.FirstName, TurkishCollation.Comparer)
             .ThenBy(d => d.LastName, TurkishCollation.Comparer)
-            .Select(d => new DoctorListItem(d.Id, FullName(d.Title, d.FirstName, d.LastName), d.PolyclinicId, d.PolyclinicName, d.Phone, d.UserId, d.IsActive))
+            .Select(d => new DoctorListItem(d.Id, FullName(d.Title, d.FirstName, d.LastName), d.PolyclinicId, d.PolyclinicName, d.Phone, d.UserId, d.IsActive, d.FacilityName))
             .ToList();
     }
 

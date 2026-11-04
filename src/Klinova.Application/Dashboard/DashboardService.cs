@@ -39,14 +39,15 @@ public sealed class DashboardService(IAppDbContext db, IClock clock)
 
         var polyclinics = (await db.Polyclinics.AsNoTracking()
                 .Where(p => p.IsActive)
-                .Select(p => new { p.Id, p.Name })
+                .Select(p => new { p.Id, p.Name, Facility = p.Facility!.Name })
                 .ToListAsync(ct))
-            .SortBy(p => p.Name);
+            .SortBy(p => p.Facility + " " + p.Name);
+        var multipleFacilities = polyclinics.Select(p => p.Facility).Distinct().Count() > 1;
 
         var loads = polyclinics
             .Select(p => new PolyclinicLoad(
                 p.Id,
-                p.Name,
+                multipleFacilities ? $"{p.Name} — {p.Facility}" : p.Name,
                 todays.Where(t => t.PolyclinicId == p.Id && t.Status == VisitStatus.Waiting).Sum(t => t.Count),
                 todays.Where(t => t.PolyclinicId == p.Id && t.Status == VisitStatus.InExamination).Sum(t => t.Count),
                 todays.Where(t => t.PolyclinicId == p.Id && t.Status == VisitStatus.Completed).Sum(t => t.Count)))

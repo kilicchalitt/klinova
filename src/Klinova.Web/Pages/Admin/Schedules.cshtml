@@ -9,7 +9,7 @@
     <div><h1 class="page-title">Çalışma Takvimleri</h1><p class="page-subtitle">Hekimlerin haftalık çalışma saatleri, randevu süreleri ve izinleri. Boş randevular bu takvimden üretilir.</p></div>
     <form method="get">
         <select name="doctorId" class="form-select" data-autosubmit aria-label="Hekim">
-            @foreach (var group in Model.Doctors.GroupBy(d => d.PolyclinicName))
+            @foreach (var group in Model.Doctors.GroupBy(d => $"{d.PolyclinicName} — {d.FacilityName}"))
             {
                 <optgroup label="@group.Key">
                     @foreach (var d in group) { <option value="@d.Id" selected="@(d.Id == Model.DoctorId)">@d.FullName</option> }

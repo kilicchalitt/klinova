@@ -53,6 +53,7 @@ public sealed class ReportService(IAppDbContext db, IClock clock)
                     p.NetAmount,
                     p.Method,
                     PolyclinicName = v.Polyclinic!.Name,
+                    FacilityName = v.Polyclinic.Facility!.Name,
                     DoctorTitle = v.Doctor != null ? v.Doctor.Title : null,
                     DoctorFirst = v.Doctor != null ? v.Doctor.FirstName : null,
                     DoctorLast = v.Doctor != null ? v.Doctor.LastName : null,
@@ -82,8 +83,10 @@ public sealed class ReportService(IAppDbContext db, IClock clock)
             .OrderBy(d => d.Day)
             .ToList();
 
+        // Departments with the same name in different facilities are reported separately.
+        var multipleFacilities = payments.Select(p => p.FacilityName).Distinct().Count() > 1;
         var byPolyclinic = payments
-            .GroupBy(p => p.PolyclinicName)
+            .GroupBy(p => multipleFacilities ? $"{p.PolyclinicName} — {p.FacilityName}" : p.PolyclinicName)
             .Select(g => new RevenueBreakdown(g.Key, g.Count(), g.Sum(p => p.NetAmount)))
             .OrderByDescending(r => r.Amount)
             .ToList();
