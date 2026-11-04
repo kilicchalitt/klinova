@@ -84,7 +84,7 @@ jobs:
 
       - name: Smoke test
         run: |
-          docker run -d --name klinova -p 8080:8080 klinova:ci
+          docker run -d --name klinova -p 8080:8080 -e Klinova__Seed__AdminPassword=Ci-Smoke-Test-1 klinova:ci
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:8080/health; then exit 0; fi
             sleep 2

@@ -122,23 +122,19 @@ public sealed class DatabaseInitializer(
             return;
         }
 
+        // No default and no generated password: secrets must never end up in logs.
         var seed = _options.Seed;
-        var password = string.IsNullOrWhiteSpace(seed.AdminPassword) ? PasswordGenerator.Generate() : seed.AdminPassword;
-
-        await CreateUserAsync(seed.AdminUserName, seed.AdminEmail, "Sistem Yöneticisi", password, Roles.Admin);
-
         if (string.IsNullOrWhiteSpace(seed.AdminPassword))
         {
-            // Shown once so the installer can sign in; the password must be changed at first sign-in.
-            logger.LogWarning(
-                "Initial administrator created. User name: {UserName}  Temporary password: {Password}  (change it at first sign-in)",
-                seed.AdminUserName,
-                password);
+            throw new SetupRequiredException(
+                "Klinova has no administrator yet. Set the initial administrator password with the configuration key " +
+                "'Klinova:Seed:AdminPassword' (environment variable Klinova__Seed__AdminPassword, or KLINOVA_ADMIN_PASSWORD " +
+                "in the .env file when using docker compose) and start the application again. " +
+                "The password must be changed at first sign-in.");
         }
-        else
-        {
-            logger.LogInformation("Initial administrator '{UserName}' created from configuration.", seed.AdminUserName);
-        }
+
+        await CreateUserAsync(seed.AdminUserName, seed.AdminEmail, "Sistem Yöneticisi", seed.AdminPassword, Roles.Admin);
+        logger.LogInformation("Initial administrator '{UserName}' created from configuration.", seed.AdminUserName);
     }
 
     private async Task SeedDemoDataAsync(CancellationToken ct)
@@ -148,8 +144,15 @@ public sealed class DatabaseInitializer(
             return;
         }
 
+        var password = _options.Seed.DemoPassword;
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            throw new SetupRequiredException(
+                "Demo data is enabled but no demo password is configured. Set 'Klinova:Seed:DemoPassword' " +
+                "(environment variable Klinova__Seed__DemoPassword, or KLINOVA_DEMO_PASSWORD in the .env file).");
+        }
+
         logger.LogInformation("Seeding demo data…");
-        var password = string.IsNullOrWhiteSpace(_options.Seed.DemoPassword) ? PasswordGenerator.Generate() : _options.Seed.DemoPassword;
 
         await CreateUserAsync("kabul", "kabul@klinova.local", "Deniz Kabul", password, Roles.Reception, mustChangePassword: false);
         await CreateUserAsync("vezne", "vezne@klinova.local", "Ece Vezne", password, Roles.Cashier, mustChangePassword: false);
@@ -214,10 +217,6 @@ public sealed class DatabaseInitializer(
         await SeedDemoAppointmentsAsync(patients, doctors, ct);
         await SeedDemoPortalPatientAsync(password, doctors[1], ct);
 
-        if (string.IsNullOrWhiteSpace(_options.Seed.DemoPassword))
-        {
-            logger.LogWarning("Demo users 'kabul', 'hekim' and 'vezne' created. Shared demo password: {Password}", password);
-        }
     }
 
     /// <summary>
@@ -315,5 +314,23 @@ public sealed class DatabaseInitializer(
         {
             throw new InvalidOperationException($"Could not {operation}: {string.Join("; ", result.Errors.Select(e => e.Description))}");
         }
+    }
+}
+
+/// <summary>Start-up cannot continue until the operator supplies a required setting.</summary>
+public sealed class SetupRequiredException : Exception
+{
+    public SetupRequiredException()
+    {
+    }
+
+    public SetupRequiredException(string message)
+        : base(message)
+    {
+    }
+
+    public SetupRequiredException(string message, Exception innerException)
+        : base(message, innerException)
+    {
     }
 }
