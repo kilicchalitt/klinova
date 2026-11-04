@@ -1,0 +1,132 @@
+@page
+@model Klinova.Web.Pages.Admin.SchedulesModel
+@using Klinova.Application.Scheduling
+@{
+    ViewData["Title"] = "Çalışma Takvimleri";
+    var days = new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday };
+}
+<div class="page-header">
+    <div><h1 class="page-title">Çalışma Takvimleri</h1><p class="page-subtitle">Hekimlerin haftalık çalışma saatleri, randevu süreleri ve izinleri. Boş randevular bu takvimden üretilir.</p></div>
+    <form method="get">
+        <select name="doctorId" class="form-select" data-autosubmit aria-label="Hekim">
+            @foreach (var group in Model.Doctors.GroupBy(d => d.PolyclinicName))
+            {
+                <optgroup label="@group.Key">
+                    @foreach (var d in group) { <option value="@d.Id" selected="@(d.Id == Model.DoctorId)">@d.FullName</option> }
+                </optgroup>
+            }
+        </select>
+    </form>
+</div>
+
+@if (Model.Schedule is not { } s)
+{
+    <div class="card"><div class="empty-state"><i class="bi bi-person-vcard"></i>Önce bir hekim tanımlayın.</div></div>
+}
+else
+{
+    <div class="row g-3">
+        <div class="col-xl-7">
+            <div class="card mb-3">
+                <div class="card-header">@s.DoctorName · @s.PolyclinicName</div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead><tr><th>Gün</th><th>Saat</th><th class="text-center">Süre</th><th class="text-center">Randevu</th><th>Geçerlilik</th><th>Online</th><th></th></tr></thead>
+                        <tbody>
+                            @if (s.Schedules.Count == 0)
+                            {
+                                <tr><td colspan="7" class="text-center text-body-secondary py-4">Çalışma saati tanımlanmamış; bu hekime randevu verilemez.</td></tr>
+                            }
+                            @foreach (var b in s.Schedules)
+                            {
+                                <tr>
+                                    <td class="fw-medium">@ScheduleService.DayName(b.DayOfWeek)</td>
+                                    <td class="font-monospace-num text-nowrap">@b.StartTime.ToString("HH:mm", CultureInfo.InvariantCulture) – @b.EndTime.ToString("HH:mm", CultureInfo.InvariantCulture)</td>
+                                    <td class="text-center text-nowrap">@b.SlotMinutes dk</td>
+                                    <td class="text-center">@b.SlotCount</td>
+                                    <td class="small text-nowrap">@b.ValidFrom.ShortDate() @(b.ValidUntil is { } u ? $"– {u.ShortDate()}" : "→")</td>
+                                    <td>@if (b.IsOnlineBookable) { <i class="bi bi-check-circle-fill text-success" title="Online randevuya açık"></i> } else { <i class="bi bi-telephone text-body-secondary" title="Yalnızca kurum"></i> }</td>
+                                    <td class="text-end">
+                                        <form method="post" asp-page-handler="DeleteBlock" asp-route-doctorId="@Model.DoctorId">
+                                            <input type="hidden" name="scheduleId" value="@b.Id" />
+                                            <button class="btn btn-sm btn-link text-danger" data-confirm="Çalışma bloğu silinsin mi?" aria-label="Sil"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><i class="bi bi-airplane me-2"></i>İzinler</div>
+                <ul class="list-group list-group-flush">
+                    @if (s.Leaves.Count == 0) { <li class="list-group-item text-body-secondary small">Kayıtlı izin yok.</li> }
+                    @foreach (var l in s.Leaves)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>@l.StartDate.ShortDate() – @l.EndDate.ShortDate() <span class="text-body-secondary">@l.Reason</span></span>
+                            <form method="post" asp-page-handler="DeleteLeave" asp-route-doctorId="@Model.DoctorId">
+                                <input type="hidden" name="leaveId" value="@l.Id" />
+                                <button class="btn btn-sm btn-link text-danger" data-confirm="İzin silinsin mi?" aria-label="Sil"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-xl-5">
+            <div class="card mb-3">
+                <div class="card-header"><i class="bi bi-plus-lg me-2"></i>Çalışma Bloğu Ekle</div>
+                <div class="card-body">
+                    <form method="post" asp-page-handler="AddBlock" asp-route-doctorId="@Model.DoctorId" class="row g-2">
+                        <div class="col-6">
+                            <label asp-for="Block.DayOfWeek" class="form-label small"></label>
+                            <select asp-for="Block.DayOfWeek" class="form-select">
+                                @foreach (var d in days) { <option value="@((int)d)">@ScheduleService.DayName(d)</option> }
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label asp-for="Block.SlotMinutes" class="form-label small"></label>
+                            <input asp-for="Block.SlotMinutes" type="number" min="5" max="240" step="5" class="form-control" />
+                        </div>
+                        <div class="col-6">
+                            <label asp-for="Block.StartTime" class="form-label small"></label>
+                            <input asp-for="Block.StartTime" type="time" class="form-control" />
+                        </div>
+                        <div class="col-6">
+                            <label asp-for="Block.EndTime" class="form-label small"></label>
+                            <input asp-for="Block.EndTime" type="time" class="form-control" />
+                        </div>
+                        <div class="col-6">
+                            <label asp-for="Block.ValidFrom" class="form-label small"></label>
+                            <input asp-for="Block.ValidFrom" type="date" class="form-control" />
+                        </div>
+                        <div class="col-6">
+                            <label asp-for="Block.ValidUntil" class="form-label small"></label>
+                            <input asp-for="Block.ValidUntil" type="date" class="form-control" />
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check"><input asp-for="Block.IsOnlineBookable" class="form-check-input" /><label asp-for="Block.IsOnlineBookable" class="form-check-label"></label></div>
+                            <div class="form-check"><input asp-for="Block.ApplyToWeekdays" class="form-check-input" /><label asp-for="Block.ApplyToWeekdays" class="form-check-label"></label></div>
+                        </div>
+                        <div class="col-12"><button class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Ekle</button></div>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><i class="bi bi-airplane me-2"></i>İzin Ekle</div>
+                <div class="card-body">
+                    <form method="post" asp-page-handler="AddLeave" asp-route-doctorId="@Model.DoctorId" class="row g-2">
+                        <div class="col-6"><label asp-for="Leave.StartDate" class="form-label small"></label><input asp-for="Leave.StartDate" type="date" class="form-control" /></div>
+                        <div class="col-6"><label asp-for="Leave.EndDate" class="form-label small"></label><input asp-for="Leave.EndDate" type="date" class="form-control" /></div>
+                        <div class="col-12"><label asp-for="Leave.Reason" class="form-label small"></label><input asp-for="Leave.Reason" class="form-control" placeholder="Örn. Yıllık izin, kongre" /></div>
+                        <div class="col-12"><button class="btn btn-outline-primary">İzin Ekle</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}

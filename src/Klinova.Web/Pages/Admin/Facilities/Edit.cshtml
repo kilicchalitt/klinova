@@ -1,0 +1,49 @@
+@page "{id:int?}"
+@model Klinova.Web.Pages.Admin.Facilities.EditModel
+@{
+    ViewData["Title"] = Model.IsNew ? "Yeni Kurum" : "Kurumu Düzenle";
+}
+<partial name="_PageHeader" model='new PageHeaderModel((string)ViewData["Title"]!)' />
+<div class="card col-lg-8">
+    <div class="card-body">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label asp-for="Input.Name" class="form-label required-mark"></label>
+                    <input asp-for="Input.Name" class="form-control" placeholder="Örn. Merkez Hastane, Kampüs B Blok, Semt Polikliniği" autofocus />
+                    <span asp-validation-for="Input.Name" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Input.City" class="form-label required-mark"></label>
+                    <input asp-for="Input.City" class="form-control" />
+                    <span asp-validation-for="Input.City" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Input.District" class="form-label required-mark"></label>
+                    <input asp-for="Input.District" class="form-control" />
+                    <span asp-validation-for="Input.District" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Input.Address" class="form-label"></label>
+                    <textarea asp-for="Input.Address" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Input.Phone" class="form-label"></label>
+                    <input asp-for="Input.Phone" class="form-control" />
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="form-check form-switch">
+                        <input asp-for="Input.IsActive" class="form-check-input" role="switch" />
+                        <label asp-for="Input.IsActive" class="form-check-label">Hizmet veriyor</label>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Kaydet</button>
+                <a asp-page="Index" class="btn btn-link">Vazgeç</a>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
