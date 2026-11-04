@@ -1,0 +1,35 @@
+@page
+@model Klinova.Web.Pages.Admin.Doctors.IndexModel
+@{
+    ViewData["Title"] = "Hekimler";
+}
+<div class="page-header">
+    <div><h1 class="page-title">Hekimler</h1><p class="page-subtitle">Hekimi bir kullanıcı hesabına bağlarsanız kendi muayene listesini görür.</p></div>
+    <a asp-page="Edit" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Yeni Hekim</a>
+</div>
+<div class="card">
+    @if (Model.Items.Count == 0)
+    {
+        <div class="empty-state"><i class="bi bi-person-vcard"></i>Henüz hekim tanımlanmadı.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Ad Soyad</th><th>Poliklinik</th><th>Telefon</th><th>Hesap</th><th>Durum</th></tr></thead>
+                <tbody>
+                    @foreach (var d in Model.Items)
+                    {
+                        <tr data-href="@Url.Page("Edit", new { id = d.Id })">
+                            <td class="fw-medium">@d.FullName</td>
+                            <td>@d.PolyclinicName</td>
+                            <td>@d.Phone.OrDash()</td>
+                            <td>@if (d.UserId is null) { <span class="text-body-secondary">—</span> } else { <i class="bi bi-link-45deg text-success" title="Kullanıcı hesabına bağlı"></i> }</td>
+                            <td>@if (d.IsActive) { <span class="badge text-bg-success">Aktif</span> } else { <span class="badge text-bg-secondary">Pasif</span> }</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
