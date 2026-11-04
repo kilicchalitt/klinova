@@ -31,18 +31,18 @@ public sealed record PolyclinicListItem(int Id, string Name, string? Location, s
 /// <summary>Maintains the institution's outpatient departments.</summary>
 public sealed class PolyclinicService(IAppDbContext db)
 {
-    public Task<List<PolyclinicListItem>> ListAsync(CancellationToken ct = default)
-        => db.Polyclinics.AsNoTracking()
-            .OrderBy(p => p.Name)
-            .Select(p => new PolyclinicListItem(p.Id, p.Name, p.Location, p.Description, p.IsActive, p.Doctors.Count(d => d.IsActive)))
-            .ToListAsync(ct);
+    public async Task<List<PolyclinicListItem>> ListAsync(CancellationToken ct = default)
+        => (await db.Polyclinics.AsNoTracking()
+                .Select(p => new PolyclinicListItem(p.Id, p.Name, p.Location, p.Description, p.IsActive, p.Doctors.Count(d => d.IsActive)))
+                .ToListAsync(ct))
+            .SortBy(p => p.Name);
 
-    public Task<List<LookupItem>> LookupAsync(bool activeOnly = true, CancellationToken ct = default)
-        => db.Polyclinics.AsNoTracking()
-            .Where(p => !activeOnly || p.IsActive)
-            .OrderBy(p => p.Name)
-            .Select(p => new LookupItem(p.Id, p.Name))
-            .ToListAsync(ct);
+    public async Task<List<LookupItem>> LookupAsync(bool activeOnly = true, CancellationToken ct = default)
+        => (await db.Polyclinics.AsNoTracking()
+                .Where(p => !activeOnly || p.IsActive)
+                .Select(p => new LookupItem(p.Id, p.Name))
+                .ToListAsync(ct))
+            .SortBy(p => p.Name);
 
     public async Task<PolyclinicInput> GetForEditAsync(int id, CancellationToken ct = default)
     {

@@ -36,12 +36,14 @@ public sealed record MedicalServiceListItem(int Id, string Code, string Name, st
 /// <summary>Maintains the price list of billable medical services.</summary>
 public sealed class MedicalServiceCatalog(IAppDbContext db)
 {
-    public Task<List<MedicalServiceListItem>> ListAsync(bool activeOnly = false, CancellationToken ct = default)
-        => db.MedicalServices.AsNoTracking()
-            .Where(s => !activeOnly || s.IsActive)
-            .OrderBy(s => s.Category).ThenBy(s => s.Name)
-            .Select(s => new MedicalServiceListItem(s.Id, s.Code, s.Name, s.Category, s.UnitPrice, s.IsActive))
-            .ToListAsync(ct);
+    public async Task<List<MedicalServiceListItem>> ListAsync(bool activeOnly = false, CancellationToken ct = default)
+        => (await db.MedicalServices.AsNoTracking()
+                .Where(s => !activeOnly || s.IsActive)
+                .Select(s => new MedicalServiceListItem(s.Id, s.Code, s.Name, s.Category, s.UnitPrice, s.IsActive))
+                .ToListAsync(ct))
+            .OrderBy(s => s.Category ?? string.Empty, TurkishCollation.Comparer)
+            .ThenBy(s => s.Name, TurkishCollation.Comparer)
+            .ToList();
 
     public async Task<MedicalServiceInput> GetForEditAsync(int id, CancellationToken ct = default)
     {
