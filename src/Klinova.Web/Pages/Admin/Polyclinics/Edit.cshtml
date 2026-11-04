@@ -1,0 +1,35 @@
+@page "{id:int?}"
+@model Klinova.Web.Pages.Admin.Polyclinics.EditModel
+@{
+    ViewData["Title"] = Model.IsNew ? "Yeni Poliklinik" : "Polikliniği Düzenle";
+}
+<partial name="_PageHeader" model='new PageHeaderModel((string)ViewData["Title"]!)' />
+<div class="card col-lg-7">
+    <div class="card-body">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="mb-3">
+                <label asp-for="Input.Name" class="form-label required-mark"></label>
+                <input asp-for="Input.Name" class="form-control" autofocus />
+                <span asp-validation-for="Input.Name" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.Location" class="form-label"></label>
+                <input asp-for="Input.Location" class="form-control" placeholder="Örn. 1. kat, 112" />
+                <span asp-validation-for="Input.Location" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.Description" class="form-label"></label>
+                <textarea asp-for="Input.Description" class="form-control" rows="2"></textarea>
+                <span asp-validation-for="Input.Description" class="text-danger small"></span>
+            </div>
+            <div class="form-check form-switch mb-4">
+                <input asp-for="Input.IsActive" class="form-check-input" role="switch" />
+                <label asp-for="Input.IsActive" class="form-check-label">Hasta kabul ediyor</label>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Kaydet</button>
+            <a asp-page="Index" class="btn btn-link">Vazgeç</a>
+        </form>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

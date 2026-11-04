@@ -1,0 +1,45 @@
+@page "{id:int?}"
+@model Klinova.Web.Pages.Admin.Services.EditModel
+@{
+    ViewData["Title"] = Model.IsNew ? "Yeni Hizmet" : "Hizmeti Düzenle";
+}
+<partial name="_PageHeader" model='new PageHeaderModel((string)ViewData["Title"]!)' />
+<div class="card col-lg-7">
+    <div class="card-body">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="Input.Code" class="form-label required-mark"></label>
+                    <input asp-for="Input.Code" class="form-control text-uppercase font-monospace-num" autofocus />
+                    <span asp-validation-for="Input.Code" class="text-danger small"></span>
+                </div>
+                <div class="col-md-8">
+                    <label asp-for="Input.Name" class="form-label required-mark"></label>
+                    <input asp-for="Input.Name" class="form-control" />
+                    <span asp-validation-for="Input.Name" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Input.Category" class="form-label"></label>
+                    <input asp-for="Input.Category" class="form-control" placeholder="Örn. Laboratuvar" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Input.UnitPrice" class="form-label required-mark"></label>
+                    <input asp-for="Input.UnitPrice" type="number" min="0" step="0.01" class="form-control" value="@Model.Input.UnitPrice.ToString("0.00", CultureInfo.InvariantCulture)" />
+                    <span asp-validation-for="Input.UnitPrice" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        <input asp-for="Input.IsActive" class="form-check-input" role="switch" />
+                        <label asp-for="Input.IsActive" class="form-check-label">Hizmet kullanımda</label>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Kaydet</button>
+                <a asp-page="Index" class="btn btn-link">Vazgeç</a>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
