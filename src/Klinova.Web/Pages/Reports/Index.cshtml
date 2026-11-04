@@ -1,0 +1,103 @@
+@page
+@model Klinova.Web.Pages.Reports.IndexModel
+@{
+    ViewData["Title"] = "Raporlar";
+    var r = Model.Report;
+    var today = Clock.Today;
+    var presets = new (string Label, DateOnly From, DateOnly To)[]
+    {
+        ("Bugün", today, today),
+        ("Son 7 gün", today.AddDays(-6), today),
+        ("Bu ay", new DateOnly(today.Year, today.Month, 1), today),
+        ("Geçen ay", new DateOnly(today.Year, today.Month, 1).AddMonths(-1), new DateOnly(today.Year, today.Month, 1).AddDays(-1)),
+        ("Bu yıl", new DateOnly(today.Year, 1, 1), today),
+    };
+}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Gelir ve Faaliyet Raporu</h1>
+        <p class="page-subtitle">Tahsilatlar tahsilat tarihine, başvuru sayıları başvuru tarihine göre hesaplanır.</p>
+    </div>
+    @if (r is not null)
+    {
+        <a asp-page-handler="Csv" asp-route-from="@Model.From?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" asp-route-to="@Model.To?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" class="btn btn-outline-primary"><i class="bi bi-filetype-csv me-1"></i>Excel (CSV) İndir</a>
+    }
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-sm-4 col-md-3">
+                <label class="form-label small" for="from">Başlangıç</label>
+                <input type="date" id="from" name="from" value="@Model.From?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" class="form-control" />
+            </div>
+            <div class="col-sm-4 col-md-3">
+                <label class="form-label small" for="to">Bitiş</label>
+                <input type="date" id="to" name="to" value="@Model.To?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" class="form-control" />
+            </div>
+            <div class="col-auto"><button type="submit" class="btn btn-primary"><i class="bi bi-arrow-repeat me-1"></i>Raporla</button></div>
+            <div class="col-12 col-lg d-flex flex-wrap gap-1 justify-content-lg-end">
+                @foreach (var preset in presets)
+                {
+                    <a class="btn btn-sm btn-light" asp-route-from="@preset.From.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" asp-route-to="@preset.To.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@preset.Label</a>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.ErrorMessage is not null)
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (r is not null)
+{
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-xl-3"><div class="card stat-card"><span class="stat-icon brand"><i class="bi bi-cash-stack"></i></span><div><div class="stat-value">@r.NetAmount.Money()</div><div class="stat-label">Net tahsilat · @r.PaymentCount makbuz</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card stat-card"><span class="stat-icon warning"><i class="bi bi-percent"></i></span><div><div class="stat-value">@r.DiscountAmount.Money()</div><div class="stat-label">Toplam indirim · Brüt @r.GrossAmount.Money()</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card stat-card"><span class="stat-icon info"><i class="bi bi-clipboard2-pulse"></i></span><div><div class="stat-value">@r.VisitCount</div><div class="stat-label">Başvuru · @r.CompletedVisitCount tamamlandı</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card stat-card"><span class="stat-icon success"><i class="bi bi-calculator"></i></span><div><div class="stat-value">@(r.PaymentCount == 0 ? 0m.Money() : (r.NetAmount / r.PaymentCount).Money())</div><div class="stat-label">Ortalama makbuz · @r.CancelledVisitCount iptal</div></div></div></div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-6">
+            <partial name="_Breakdown" model='("Poliklinik Bazında", "Tahsilat", r.ByPolyclinic, r.NetAmount)' />
+        </div>
+        <div class="col-xl-6">
+            <partial name="_Breakdown" model='("Hekim Bazında", "Tahsilat", r.ByDoctor, r.NetAmount)' />
+        </div>
+        <div class="col-xl-6">
+            <partial name="_Breakdown" model='("Hizmet Bazında (indirim dağıtılmış)", "Adet", r.ByService, r.NetAmount)' />
+        </div>
+        <div class="col-xl-6">
+            <div class="card mb-3">
+                <div class="card-header">Ödeme Şekli</div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var method in Enum.GetValues<PaymentMethod>())
+                    {
+                        <li class="list-group-item d-flex justify-content-between"><span>@method.DisplayName()</span><span class="font-monospace-num">@(r.ByPaymentMethod.TryGetValue(method, out var amount) ? amount.Money() : 0m.Money())</span></li>
+                    }
+                </ul>
+            </div>
+            <div class="card">
+                <div class="card-header">Günlük Dağılım</div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Gün</th><th class="text-end">Makbuz</th><th class="text-end">İndirim</th><th class="text-end">Net</th></tr></thead>
+                        <tbody>
+                            @foreach (var d in r.Daily)
+                            {
+                                <tr><td>@d.Day.ShortDate()</td><td class="text-end">@d.PaymentCount</td><td class="text-end font-monospace-num">@d.Discount.Money()</td><td class="text-end font-monospace-num">@d.NetAmount.Money()</td></tr>
+                            }
+                            @if (r.Daily.Count == 0)
+                            {
+                                <tr><td colspan="4" class="text-center text-body-secondary py-3">Seçilen aralıkta tahsilat yok.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
