@@ -164,7 +164,7 @@ public sealed class UserAdministration(UserManager<AppUser> users, IClock clock,
             throw new DomainException("En az bir rol seçilmelidir.");
         }
 
-        if (roles.Any(r => !Application.Common.Roles.All.Contains(r)))
+        if (roles.Any(r => !Application.Common.Roles.Staff.Contains(r)))
         {
             throw new DomainException("Geçersiz rol seçimi.");
         }
