@@ -1,0 +1,34 @@
+name: Özellik önerisi / Feature request
+description: Yeni bir özellik veya iyileştirme önerin. / Suggest an improvement.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: Önce [yol haritasını](https://github.com/kilicchalitt/klinova/blob/main/docs/ROADMAP.md) ve açık issue'ları kontrol edin.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Hangi sorunu çözüyor? / Problem
+      description: Kurumunuzda bu ihtiyaç hangi iş akışında ortaya çıkıyor?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Önerilen çözüm / Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Değerlendirilen alternatifler / Alternatives considered
+  - type: dropdown
+    id: role
+    attributes:
+      label: İlgili rol / Affected role
+      multiple: true
+      options:
+        - Yönetici
+        - Hasta Kabul
+        - Hekim
+        - Vezne

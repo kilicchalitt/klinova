@@ -1,0 +1,65 @@
+name: Hata bildirimi / Bug report
+description: Beklenmeyen bir davranışı bildirin. / Report unexpected behaviour.
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Gerçek hasta verisi paylaşmayın.** Ekran görüntülerinde kişisel verileri gizleyin.
+        Güvenlik açıklarını burada değil, [SECURITY.md](https://github.com/kilicchalitt/klinova/blob/main/SECURITY.md) üzerinden bildirin.
+
+        **Do not share real patient data.** Report security issues privately (see SECURITY.md).
+  - type: textarea
+    id: description
+    attributes:
+      label: Ne oldu? / What happened?
+      description: Hatanın kısa ve net açıklaması.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Yeniden üretme adımları / Steps to reproduce
+      placeholder: |
+        1. "Hastalar" ekranına git
+        2. ...
+        3. Hata oluşur
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Beklenen davranış / Expected behaviour
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Sürüm / Version
+      placeholder: "1.0.0 veya commit"
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Kurulum şekli / Deployment
+      options:
+        - Docker
+        - Linux (systemd)
+        - Windows / IIS
+        - Geliştirme ortamı (dotnet run)
+    validations:
+      required: true
+  - type: dropdown
+    id: database
+    attributes:
+      label: Veritabanı / Database
+      options:
+        - SQLite
+        - SQL Server
+  - type: textarea
+    id: logs
+    attributes:
+      label: Loglar / Logs
+      description: İlgili log satırları (kişisel veri içermediğinden emin olun).
+      render: text
