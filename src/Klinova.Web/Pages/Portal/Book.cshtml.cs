@@ -179,7 +179,7 @@ public class BookModel(
         try
         {
             await waitlist.JoinAsync(patient.Id, polyclinicId, DoctorId, today, until ?? today.AddDays(14), ct);
-            this.Success("Bekleme listesine eklendiniz. Uygun bir randevu açıldığında SMS ile bilgilendirileceksiniz.");
+            this.Success("Bekleme listesine eklendiniz. Uygun bir randevu açıldığında Bildirimlerim bölümünden haber vereceğiz.");
             return RedirectToPage("Appointments");
         }
         catch (DomainException ex)

@@ -60,11 +60,11 @@ public sealed class SecurityTests(KlinovaWebFactory factory) : IClassFixture<Kli
     [Fact]
     public async Task Login_RejectsPostWithoutAntiforgeryToken()
     {
-        var response = await factory.CreateBrowser().PostAsync("/Account/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        var response = await factory.CreateBrowser().PostFormAsync("/Account/Login", new Dictionary<string, string>
         {
             ["Input.UserName"] = "kabul",
             ["Input.Password"] = KlinovaWebFactory.DemoPassword,
-        }));
+        });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

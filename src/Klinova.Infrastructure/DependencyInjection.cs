@@ -9,6 +9,7 @@ using Klinova.Infrastructure.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -47,6 +48,8 @@ public static class DependencyInjection
                 EnsureSqliteDirectoryExists(connectionString);
                 services.AddDbContext<SqliteAppDbContext>((sp, o) => o
                     .UseSqlite(connectionString)
+                    // SQLite rebuilds tables to add foreign keys, which EF reports on every fresh install; expected and harmless.
+                    .ConfigureWarnings(w => w.Ignore(RelationalEventId.NonTransactionalMigrationOperationWarning))
                     .AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>()));
                 services.AddScoped<AppDbContext>(sp => sp.GetRequiredService<SqliteAppDbContext>());
                 break;
@@ -93,6 +96,12 @@ public static class DependencyInjection
         services.AddOptions<BackgroundJobOptions>().Bind(configuration.GetSection(BackgroundJobOptions.SectionName));
 
         var notifications = configuration.GetSection(NotificationOptions.SectionName).Get<NotificationOptions>() ?? new NotificationOptions();
+        var smsConfigured = string.Equals(notifications.Sms.Provider, "Webhook", StringComparison.OrdinalIgnoreCase);
+        services.Configure<NotificationDeliveryOptions>(o =>
+        {
+            o.SmsEnabled = smsConfigured;
+            o.EmailEnabled = notifications.Email.Enabled;
+        });
         if (notifications.Email.Enabled)
         {
             services.AddScoped<INotificationSender, SmtpEmailSender>();
@@ -102,7 +111,7 @@ public static class DependencyInjection
             services.AddScoped<INotificationSender, LoggingEmailSender>();
         }
 
-        if (string.Equals(notifications.Sms.Provider, "Webhook", StringComparison.OrdinalIgnoreCase))
+        if (smsConfigured)
         {
             services.AddHttpClient<WebhookSmsSender>(c => c.Timeout = TimeSpan.FromSeconds(15));
             services.AddScoped<INotificationSender>(sp => sp.GetRequiredService<WebhookSmsSender>());

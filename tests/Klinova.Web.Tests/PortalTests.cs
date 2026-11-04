@@ -32,7 +32,7 @@ public sealed partial class PortalTests(KlinovaWebFactory factory) : IClassFixtu
     private static async Task<HttpResponseMessage> PostFormAsync(HttpClient client, string pagePath, string postPath, Dictionary<string, string> form)
     {
         form["__RequestVerificationToken"] = await KlinovaWebFactory.GetAntiforgeryTokenAsync(client, pagePath);
-        return await client.PostAsync(postPath, new FormUrlEncodedContent(form));
+        return await client.PostFormAsync(postPath, form);
     }
 
     [Fact]
@@ -62,6 +62,26 @@ public sealed partial class PortalTests(KlinovaWebFactory factory) : IClassFixtu
     }
 
     [Fact]
+    public async Task DemoPortalPatient_CanSignInAndSeeAppointmentAndNotification()
+    {
+        var client = factory.CreateBrowser();
+        var token = await KlinovaWebFactory.GetAntiforgeryTokenAsync(client, "/Portal/Login");
+        var login = await client.PostFormAsync("/Portal/Login", new Dictionary<string, string>
+        {
+            ["Input.NationalId"] = "10000000146",
+            ["Input.Password"] = KlinovaWebFactory.DemoPassword,
+            ["__RequestVerificationToken"] = token,
+        });
+        Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
+        Assert.Equal("/Portal", login.Headers.Location!.OriginalString);
+
+        var appointments = await (await client.GetAsync("/Portal/Appointments")).Content.ReadAsStringAsync();
+        Assert.Contains("Kontrol randevusu.", appointments, StringComparison.Ordinal);
+        var inbox = await (await client.GetAsync("/Portal/Notifications")).Content.ReadAsStringAsync();
+        Assert.Contains("Randevu onayı", inbox, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task NewPatient_RegistersBooksAndSeesTheAppointment()
     {
         var client = factory.CreateBrowser();
@@ -79,6 +99,15 @@ public sealed partial class PortalTests(KlinovaWebFactory factory) : IClassFixtu
         Assert.Contains("Randevunuz oluşturuldu", appointments, StringComparison.Ordinal);
         Assert.Contains("Dahiliye", appointments, StringComparison.Ordinal);
         Assert.Contains("Kontrol", appointments, StringComparison.Ordinal);
+
+        // Without an SMS provider the confirmation is delivered to the portal inbox.
+        var home = await (await client.GetAsync("/Portal")).Content.ReadAsStringAsync();
+        Assert.Contains("Yeni bildirimleriniz", home, StringComparison.Ordinal);
+        var inbox = await (await client.GetAsync("/Portal/Notifications")).Content.ReadAsStringAsync();
+        Assert.Contains("Randevu onayı", inbox, StringComparison.Ordinal);
+        Assert.Contains("Randevu kodu", inbox, StringComparison.Ordinal);
+        var afterReading = await (await client.GetAsync("/Portal")).Content.ReadAsStringAsync();
+        Assert.DoesNotContain("Yeni bildirimleriniz", afterReading, StringComparison.Ordinal);
     }
 
     [Fact]

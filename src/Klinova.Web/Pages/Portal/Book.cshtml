@@ -115,7 +115,7 @@
         <div class="card mt-3 border-warning">
             <div class="card-body">
                 <h2 class="h6"><i class="bi bi-hourglass-split me-1"></i>Uygun randevu bulunamadı</h2>
-                <p class="small text-body-secondary">Bekleme listesine yazılın; seçtiğiniz poliklinikte@(Model.DoctorId is null ? "" : " ve hekimde") bir randevu iptal edildiğinde size SMS ile haber verelim.</p>
+                <p class="small text-body-secondary">Bekleme listesine yazılın; seçtiğiniz poliklinikte@(Model.DoctorId is null ? "" : " ve hekimde") bir randevu iptal edildiğinde "Bildirimlerim" bölümünüze haber verelim.</p>
                 <form method="post" asp-page-handler="Waitlist" asp-route-polyclinicId="@Model.PolyclinicId" asp-route-doctorId="@Model.DoctorId" asp-route-city="@Model.City" asp-route-facilityId="@Model.FacilityId" class="row g-2 align-items-end">
                     <div class="col-sm-5 col-md-4">
                         <label class="form-label small" for="until">Şu tarihe kadar bekleyebilirim</label>

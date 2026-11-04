@@ -25,15 +25,15 @@ public sealed class SeedOptions
     public string AdminEmail { get; set; } = "admin@klinova.local";
 
     /// <summary>
-    /// Initial administrator password. When empty, a random password is generated and
-    /// written to the log once. The administrator must change it at first sign-in.
+    /// Initial administrator password; required while no administrator exists. It is never
+    /// logged and must be changed at first sign-in.
     /// </summary>
     public string? AdminPassword { get; set; }
 
     /// <summary>Create sample polyclinics, physicians, services, patients and demo users.</summary>
     public bool DemoData { get; set; }
 
-    /// <summary>Password for the demo users (reception, doctor, cashier). Generated when empty.</summary>
+    /// <summary>Password for the demo users and the demo patient; required when <see cref="DemoData"/> is enabled.</summary>
     public string? DemoPassword { get; set; }
 }
 

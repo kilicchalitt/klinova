@@ -1,6 +1,6 @@
 # Klinova — single-server deployment with SQLite.
 #
-#   cp .env.example .env      # optional: set the initial administrator password
+#   cp .env.example .env      # then set KLINOVA_ADMIN_PASSWORD (required)
 #   docker compose up -d
 #
 # The application listens on http://localhost:8080. Put a TLS-terminating reverse
@@ -16,7 +16,7 @@ services:
       - "${KLINOVA_PORT:-8080}:8080"
     environment:
       Klinova__Seed__AdminUserName: ${KLINOVA_ADMIN_USER:-admin}
-      Klinova__Seed__AdminPassword: ${KLINOVA_ADMIN_PASSWORD:-}
+      Klinova__Seed__AdminPassword: ${KLINOVA_ADMIN_PASSWORD:?Set KLINOVA_ADMIN_PASSWORD in the .env file (copy .env.example)}
       Klinova__Seed__DemoData: ${KLINOVA_DEMO_DATA:-false}
       Klinova__Seed__DemoPassword: ${KLINOVA_DEMO_PASSWORD:-}
       Klinova__TimeZone: ${KLINOVA_TIMEZONE:-Europe/Istanbul}

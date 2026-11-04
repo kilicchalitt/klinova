@@ -26,6 +26,7 @@ public sealed class AppointmentTests : IDisposable
 
     private readonly TestDatabase _db = new();
     private readonly AppointmentPolicy _policy = new();
+    private readonly NotificationDeliveryOptions _delivery = new() { SmsEnabled = true, EmailEnabled = true };
 
     private int _polyclinicId;
     private int _otherPolyclinicId;
@@ -43,7 +44,7 @@ public sealed class AppointmentTests : IDisposable
         var ctx = _db.CreateContext();
         var options = Options.Create(_policy);
         var availability = new AvailabilityService(ctx, _db.Clock, options);
-        var notifications = new NotificationService(ctx, _db.Clock);
+        var notifications = new NotificationService(ctx, _db.Clock, Options.Create(_delivery));
         var appointments = new AppointmentService(ctx, _db.Clock, availability, notifications, new VisitService(ctx, _db.Clock), options);
         return new Services(ctx, availability, appointments, new WaitlistService(ctx, _db.Clock, options), new AppointmentMaintenance(ctx, _db.Clock, notifications, options, NullLogger<AppointmentMaintenance>.Instance));
     }
@@ -147,6 +148,48 @@ public sealed class AppointmentTests : IDisposable
         Assert.Equal(2, messages.Count);
         Assert.Contains(messages, m => m.Channel == NotificationChannel.Sms && m.Body.Contains(appointment.ConfirmationCode, StringComparison.Ordinal));
         Assert.DoesNotContain(await s.Availability.GetFreeSlotsAsync(_polyclinicId, _doctorId, Tomorrow, Tomorrow, false), x => x.Start == new TimeOnly(9, 30));
+    }
+
+    [Fact]
+    public async Task PortalPatients_ReceiveMessagesInThePortalEvenWithoutProviders()
+    {
+        await SeedAsync();
+        await using (var ctx = _db.CreateContext())
+        {
+            var patient = await ctx.Patients.SingleAsync(p => p.Id == _patientId);
+            patient.UserId = "portal-user";
+            await ctx.SaveChangesAsync();
+        }
+
+        _delivery.SmsEnabled = false;
+        _delivery.EmailEnabled = false;
+        var s = Create();
+
+        var appointment = await s.Appointments.BookAsync(Request(Tomorrow, 9), AppointmentChannel.Online);
+
+        var message = Assert.Single(await s.Db.Notifications.ToListAsync());
+        Assert.Equal(NotificationChannel.Portal, message.Channel);
+        Assert.Equal(NotificationStatus.Sent, message.Status);
+        Assert.Contains(appointment.ConfirmationCode, message.Body, StringComparison.Ordinal);
+
+        var inbox = new PatientInbox(s.Db, _db.Clock);
+        Assert.Equal(1, await inbox.UnreadCountAsync(_patientId));
+        await inbox.MarkAllReadAsync(_patientId);
+        Assert.Equal(0, await inbox.UnreadCountAsync(_patientId));
+        Assert.NotNull(Assert.Single(await inbox.ListAsync(_patientId)).ReadAtUtc);
+    }
+
+    [Fact]
+    public async Task WithoutProvidersOrPortalAccount_NothingIsQueued()
+    {
+        await SeedAsync();
+        _delivery.SmsEnabled = false;
+        _delivery.EmailEnabled = false;
+        var s = Create();
+
+        await s.Appointments.BookAsync(Request(Tomorrow, 9), AppointmentChannel.Desk);
+
+        Assert.Empty(await s.Db.Notifications.ToListAsync());
     }
 
     [Fact]

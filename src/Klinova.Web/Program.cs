@@ -47,7 +47,18 @@ app.UseMiddleware<PasswordChangeRequiredMiddleware>();
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapRazorPages();
 
-await DatabaseInitializer.InitializeAsync(app.Services);
+try
+{
+    await DatabaseInitializer.InitializeAsync(app.Services);
+}
+catch (SetupRequiredException ex)
+{
+    // A missing setting is an operator task, not a crash: explain it in one line and stop.
+    app.Logger.LogCritical("{Message}", ex.Message);
+    Environment.ExitCode = 1;
+    return;
+}
+
 await app.RunAsync();
 
 /// <summary>Entry point; public so that integration tests can use WebApplicationFactory.</summary>

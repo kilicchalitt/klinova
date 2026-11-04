@@ -16,12 +16,21 @@ dotnet test
 dotnet run --project src/Klinova.Web --launch-profile http
 ```
 
-The Development environment seeds demo data. To use fixed passwords locally, keep them
-out of the repository with user secrets:
+The Development environment seeds demo data (two facilities, physicians with schedules, patients,
+appointments and a patient portal account) with the local-only passwords from
+`appsettings.Development.json`:
+
+| Account | Password |
+| --- | --- |
+| `admin` | `Klinova-Admin-1` (must be changed at first sign-in) |
+| `kabul`, `hekim`, `vezne` | `Klinova-Demo-1` |
+| Patient portal: national id `10000000146` | `Klinova-Demo-1` |
+
+These values only apply to `ASPNETCORE_ENVIRONMENT=Development`; production installations generate or
+require their own passwords. Override them with user secrets if you prefer:
 
 ```bash
-dotnet user-secrets --project src/Klinova.Web set "Klinova:Seed:AdminPassword" "Local-Admin-2026"
-dotnet user-secrets --project src/Klinova.Web set "Klinova:Seed:DemoPassword" "Local-Demo-2026"
+dotnet user-secrets --project src/Klinova.Web set "Klinova:Seed:DemoPassword" "Another-Demo-1"
 ```
 
 Delete `src/Klinova.Web/data/` to start again from an empty database.

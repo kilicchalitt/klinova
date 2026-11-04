@@ -1,7 +1,15 @@
 @inject Klinova.Application.Settings.InstitutionService Institution
+@inject Klinova.Web.Infrastructure.PortalAccounts Accounts
+@inject Klinova.Application.Notifications.PatientInbox Inbox
 @{
     var institution = await Institution.GetAsync();
     var signedIn = User.IsInRole(Roles.Patient);
+    var unread = 0;
+    if (signedIn)
+    {
+        var patient = await Accounts.GetPatientAsync(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+        unread = await Inbox.UnreadCountAsync(patient.Id);
+    }
     var current = ViewContext.RouteData.Values["page"] as string ?? string.Empty;
     string Active(string page) => current.Equals(page, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
 }
@@ -33,6 +41,12 @@
                     @if (signedIn)
                     {
                         <li class="nav-item"><a class="nav-link @Active("/Portal/Appointments")" asp-page="/Portal/Appointments"><i class="bi bi-calendar-check me-1"></i>Randevularım</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link @Active("/Portal/Notifications")" asp-page="/Portal/Notifications" aria-label="Bildirimlerim@(unread > 0 ? $", {unread} okunmamış" : "")">
+                                <i class="bi @(unread > 0 ? "bi-bell-fill" : "bi-bell") me-1"></i>Bildirimlerim
+                                @if (unread > 0) { <span class="badge rounded-pill text-bg-danger">@unread</span> }
+                            </a>
+                        </li>
                         <li class="nav-item"><a class="nav-link @Active("/Portal/Profile")" asp-page="/Portal/Profile"><i class="bi bi-person-circle me-1"></i>@User.DisplayName()</a></li>
                         <li class="nav-item">
                             <form method="post" asp-page="/Account/Logout" class="d-inline">

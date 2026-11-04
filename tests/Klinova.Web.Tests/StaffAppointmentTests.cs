@@ -42,13 +42,13 @@ public sealed class StaffAppointmentTests(KlinovaWebFactory factory) : IClassFix
         var client = factory.CreateBrowser();
         await KlinovaWebFactory.SignInAsync(client, "admin", KlinovaWebFactory.AdminPassword);
         var token = await KlinovaWebFactory.GetAntiforgeryTokenAsync(client, "/Account/ChangePassword");
-        var changed = await client.PostAsync("/Account/ChangePassword", new FormUrlEncodedContent(new Dictionary<string, string>
+        var changed = await client.PostFormAsync("/Account/ChangePassword", new Dictionary<string, string>
         {
             ["Input.CurrentPassword"] = KlinovaWebFactory.AdminPassword,
             ["Input.NewPassword"] = "Admin-Yeni-2026",
             ["Input.ConfirmPassword"] = "Admin-Yeni-2026",
             ["__RequestVerificationToken"] = token,
-        }));
+        });
         Assert.Equal(HttpStatusCode.Redirect, changed.StatusCode);
 
         string[] pages =

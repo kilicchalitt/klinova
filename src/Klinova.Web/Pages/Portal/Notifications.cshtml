@@ -1,0 +1,48 @@
+@page
+@model Klinova.Web.Pages.Portal.NotificationsModel
+@using Klinova.Domain.Notifications
+@{
+    ViewData["Title"] = "Bildirimlerim";
+}
+<div class="page-header">
+    <div><h1 class="page-title">Bildirimlerim</h1><p class="page-subtitle">Randevu onayları, hatırlatmalar, iptaller ve bekleme listesi haberleri.</p></div>
+    <a asp-page="Appointments" class="btn btn-outline-primary"><i class="bi bi-calendar-check me-1"></i>Randevularım</a>
+</div>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="card"><div class="empty-state"><i class="bi bi-bell"></i>Henüz bildiriminiz yok.</div></div>
+}
+else
+{
+    <div class="card">
+        <ul class="list-group list-group-flush">
+            @foreach (var n in Model.Items)
+            {
+                var icon = n.Type switch
+                {
+                    NotificationType.AppointmentBooked => "bi-calendar-check text-success",
+                    NotificationType.AppointmentReminder => "bi-alarm text-primary",
+                    NotificationType.AppointmentCancelled => "bi-calendar-x text-danger",
+                    _ => "bi-hourglass-split text-warning",
+                };
+                <li class="list-group-item notification-item @(n.ReadAtUtc is null ? "unread" : "")">
+                    <div class="d-flex gap-3">
+                        <i class="bi @icon fs-4" aria-hidden="true"></i>
+                        <div class="flex-grow-1">
+                            <div class="d-flex flex-wrap justify-content-between gap-2">
+                                <span class="fw-semibold">@n.Type.DisplayName() @if (n.ReadAtUtc is null) { <span class="badge text-bg-primary ms-1">Yeni</span> }</span>
+                                <span class="small text-body-secondary">@Clock.ToLocal(n.CreatedAtUtc).ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture)</span>
+                            </div>
+                            <div class="mt-1">@n.Body</div>
+                            @if (n.Type == NotificationType.WaitlistSlotAvailable)
+                            {
+                                <a asp-page="Book" class="btn btn-sm btn-warning mt-2"><i class="bi bi-lightning-charge me-1"></i>Hemen randevu al</a>
+                            }
+                        </div>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+}

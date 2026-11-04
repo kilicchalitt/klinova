@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<AppointmentMaintenance>();
         services.AddScoped<NotificationService>();
         services.AddScoped<NotificationDispatcher>();
+        services.AddScoped<PatientInbox>();
         return services;
     }
 }

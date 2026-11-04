@@ -122,23 +122,19 @@ public sealed class DatabaseInitializer(
             return;
         }
 
+        // No default and no generated password: secrets must never end up in logs.
         var seed = _options.Seed;
-        var password = string.IsNullOrWhiteSpace(seed.AdminPassword) ? PasswordGenerator.Generate() : seed.AdminPassword;
-
-        await CreateUserAsync(seed.AdminUserName, seed.AdminEmail, "Sistem Yöneticisi", password, Roles.Admin);
-
         if (string.IsNullOrWhiteSpace(seed.AdminPassword))
         {
-            // Shown once so the installer can sign in; the password must be changed at first sign-in.
-            logger.LogWarning(
-                "Initial administrator created. User name: {UserName}  Temporary password: {Password}  (change it at first sign-in)",
-                seed.AdminUserName,
-                password);
+            throw new SetupRequiredException(
+                "Klinova has no administrator yet. Set the initial administrator password with the configuration key " +
+                "'Klinova:Seed:AdminPassword' (environment variable Klinova__Seed__AdminPassword, or KLINOVA_ADMIN_PASSWORD " +
+                "in the .env file when using docker compose) and start the application again. " +
+                "The password must be changed at first sign-in.");
         }
-        else
-        {
-            logger.LogInformation("Initial administrator '{UserName}' created from configuration.", seed.AdminUserName);
-        }
+
+        await CreateUserAsync(seed.AdminUserName, seed.AdminEmail, "Sistem Yöneticisi", seed.AdminPassword, Roles.Admin);
+        logger.LogInformation("Initial administrator '{UserName}' created from configuration.", seed.AdminUserName);
     }
 
     private async Task SeedDemoDataAsync(CancellationToken ct)
@@ -148,8 +144,15 @@ public sealed class DatabaseInitializer(
             return;
         }
 
+        var password = _options.Seed.DemoPassword;
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            throw new SetupRequiredException(
+                "Demo data is enabled but no demo password is configured. Set 'Klinova:Seed:DemoPassword' " +
+                "(environment variable Klinova__Seed__DemoPassword, or KLINOVA_DEMO_PASSWORD in the .env file).");
+        }
+
         logger.LogInformation("Seeding demo data…");
-        var password = string.IsNullOrWhiteSpace(_options.Seed.DemoPassword) ? PasswordGenerator.Generate() : _options.Seed.DemoPassword;
 
         await CreateUserAsync("kabul", "kabul@klinova.local", "Deniz Kabul", password, Roles.Reception, mustChangePassword: false);
         await CreateUserAsync("vezne", "vezne@klinova.local", "Ece Vezne", password, Roles.Cashier, mustChangePassword: false);
@@ -212,11 +215,57 @@ public sealed class DatabaseInitializer(
         await db.SaveChangesAsync(ct);
 
         await SeedDemoAppointmentsAsync(patients, doctors, ct);
+        await SeedDemoPortalPatientAsync(password, doctors[1], ct);
 
-        if (string.IsNullOrWhiteSpace(_options.Seed.DemoPassword))
+    }
+
+    /// <summary>
+    /// A ready-to-use patient portal account so that the portal can be tried without registering.
+    /// 10000000146 is the widely published example number with valid check digits.
+    /// </summary>
+    private async Task SeedDemoPortalPatientAsync(string password, Doctor doctor, CancellationToken ct)
+    {
+        const string nationalId = "10000000146";
+        if (await db.Patients.AnyAsync(p => p.NationalId == nationalId, ct))
         {
-            logger.LogWarning("Demo users 'kabul', 'hekim' and 'vezne' created. Shared demo password: {Password}", password);
+            return;
         }
+
+        var user = await CreateUserAsync(nationalId, "hasta@klinova.local", "Elif Şahin", password, Roles.Patient, mustChangePassword: false);
+        var patient = new Patient
+        {
+            FirstName = "Elif",
+            LastName = "Şahin",
+            NationalId = nationalId,
+            Gender = Gender.Female,
+            BirthDate = new DateOnly(1990, 5, 17),
+            Phone = "0555 000 00 06",
+            InsuranceType = InsuranceType.SocialSecurity,
+            UserId = user.Id,
+            PortalConsentAtUtc = clock.UtcNow,
+        };
+        patient.RefreshSearchName();
+        db.Patients.Add(patient);
+        await db.SaveChangesAsync(ct);
+
+        try
+        {
+            var availability = services.GetRequiredService<AvailabilityService>();
+            var slots = await availability.GetFreeSlotsAsync(doctor.PolyclinicId, doctor.Id, clock.Today.AddDays(1), clock.Today.AddDays(10), online: true, ct);
+            if (slots.Count > 3)
+            {
+                await services.GetRequiredService<AppointmentService>().BookAsync(
+                    new BookingRequest { PatientId = patient.Id, DoctorId = doctor.Id, Date = slots[3].Date, StartTime = slots[3].Start, Note = "Kontrol randevusu." },
+                    AppointmentChannel.Online,
+                    ct);
+            }
+        }
+        catch (Domain.Common.DomainException ex)
+        {
+            logger.LogWarning(ex, "Demo portal appointment could not be created.");
+        }
+
+        logger.LogInformation("Demo accounts ready. Staff: admin, kabul, hekim, vezne. Patient portal: T.C. {NationalId}.", nationalId);
     }
 
     /// <summary>Books a few appointments on the next working day so the calendars are not empty.</summary>
@@ -265,5 +314,23 @@ public sealed class DatabaseInitializer(
         {
             throw new InvalidOperationException($"Could not {operation}: {string.Join("; ", result.Errors.Select(e => e.Description))}");
         }
+    }
+}
+
+/// <summary>Start-up cannot continue until the operator supplies a required setting.</summary>
+public sealed class SetupRequiredException : Exception
+{
+    public SetupRequiredException()
+    {
+    }
+
+    public SetupRequiredException(string message)
+        : base(message)
+    {
+    }
+
+    public SetupRequiredException(string message, Exception innerException)
+        : base(message, innerException)
+    {
     }
 }

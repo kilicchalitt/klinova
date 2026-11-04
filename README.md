@@ -79,10 +79,10 @@ kurumun kendi randevu sisteminde uygular. Bütün kurallar kurum tarafından aya
 | Tekrarlayan gelmemelerde kısıtlama genişler | 15 gün içinde **2 gelmeme** → tüm polikliniklerden kısıtlama |
 | Aynı branşta aynı anda tek aktif randevu | Poliklinik başına **1** aktif randevu, hasta başına toplam **5** |
 | Randevu belirli süre öncesine kadar iptal edilebilir | Randevudan **2 saat** öncesine kadar online iptal/değişiklik |
-| Uygun randevu yoksa bekleme listesi | Bekleme listesi; iptal edilen saat **ilk 3 bekleyen** hastaya SMS ile bildirilir |
+| Uygun randevu yoksa bekleme listesi | Bekleme listesi; iptal edilen saat **ilk 3 bekleyen** hastaya bildirilir |
 | "Fark etmez" hekim seçimi, ilk uygun randevu | Hekim seçmeden tüm hekimlerin saatleri; **ilk uygun randevu** öne çıkarılır |
 | Hekime not | Hasta randevu alırken hekime not bırakabilir |
-| Randevu hatırlatma | Randevudan **24 saat** önce SMS / e-posta hatırlatması |
+| Randevu hatırlatma | Randevudan **24 saat** önce portal bildirimi (tanımlıysa SMS / e-posta) |
 | İleri tarihli randevu | Online **30 gün**, kurum personeli **90 gün** ileriye randevu verebilir |
 
 **Klinova'nın ek olarak sağladıkları:** randevunun kabul, muayene, vezne ve raporlama ile aynı
@@ -138,8 +138,8 @@ blokları; tüm kuralların kurum tarafından ayarlanabilmesi ve verilerin kurum
 
 ### 🔔 Bildirimler
 - Randevu onayı, **24 saat önce hatırlatma**, iptal ve bekleme listesi mesajları
-- SMS (operatör API'si için HTTP webhook) ve e-posta (SMTP); sağlayıcı yoksa mesajlar kaydedilir
-- Gönderim kuyruğu, otomatik tekrar deneme ve yönetici ekranı
+- Hasta portalında **Bildirimlerim** bölümü ve okunmamış bildirim sayacı; ek sağlayıcı gerekmez
+- İsteğe bağlı SMS (operatör API'si için HTTP webhook) ve e-posta (SMTP), gönderim kuyruğu ve otomatik tekrar deneme
 
 ### 🗂️ Hasta Kayıt ve Kabul
 - T.C. Kimlik No **algoritmik doğrulama** ve **mükerrer kayıt engeli**
@@ -203,21 +203,20 @@ KLINOVA_DEMO_PASSWORD=Deneme-Demo-1
 docker compose up -d
 ```
 
-**4. Tarayıcıda <http://localhost:8080> adresini açın.**
+**4. Tarayıcıda <http://localhost:8080> adresini açın.** Açılan sayfa **hasta portalıdır**; kurum
+uygulamasına sayfanın altındaki **Personel Girişi** bağlantısıyla geçilir.
 
-- Açılan sayfa **hasta portalıdır**. *Hesap Oluştur* ile bir test hastası oluşturup randevu alabilirsiniz
-  (test için algoritmaya uygun bir numara kullanın, örn. `10000000146`).
-- Kurum uygulaması için sayfanın altındaki **Personel Girişi** bağlantısını kullanın:
+| Nereden | Kullanıcı | Şifre | Rol |
+| --- | --- | --- | --- |
+| Hasta portalı → Giriş Yap | T.C. `10000000146` | `KLINOVA_DEMO_PASSWORD` | Hasta (randevusu ve bildirimi hazır) |
+| Personel Girişi | `admin` | `KLINOVA_ADMIN_PASSWORD` | Yönetici (ilk girişte yeni şifre istenir) |
+| Personel Girişi | `kabul` | `KLINOVA_DEMO_PASSWORD` | Hasta Kabul |
+| Personel Girişi | `hekim` | `KLINOVA_DEMO_PASSWORD` | Hekim (Dahiliye) |
+| Personel Girişi | `vezne` | `KLINOVA_DEMO_PASSWORD` | Vezne |
 
-| Kullanıcı adı | Rol | Şifre |
-| --- | --- | --- |
-| `admin` | Yönetici | `KLINOVA_ADMIN_PASSWORD` (ilk girişte değiştirmeniz istenir) |
-| `kabul` | Hasta Kabul | `KLINOVA_DEMO_PASSWORD` |
-| `hekim` | Hekim (Dahiliye) | `KLINOVA_DEMO_PASSWORD` |
-| `vezne` | Vezne | `KLINOVA_DEMO_PASSWORD` |
-
-Demo verisi iki şube (Merkez Poliklinik ve Semt Polikliniği), hafta içi çalışma takvimli hekimler
-ve örnek randevular içerir.
+Örnek akış: hasta portalından randevu alın → `kabul` ile *Randevular* ekranında görün →
+`hekim` ile muayene edin → `vezne` ile tahsilat yapıp makbuz yazdırın.
+Demo verisi iki şube, hafta içi çalışma takvimli hekimler ve örnek randevular içerir.
 
 > **Gerçek kullanım için** demo modunu kapalı tutun (`KLINOVA_DEMO_DATA=false`), uygulamayı
 > HTTPS arkasında yayınlayın, SMS/e-posta sağlayıcınızı tanımlayın ve [Kurulum Rehberi](docs/installation.md)'ndeki
@@ -236,8 +235,16 @@ cd klinova
 dotnet run --project src/Klinova.Web --launch-profile http
 ```
 
-Uygulama <http://localhost:5080> adresinde açılır. Geliştirme ortamında demo verisi otomatik
-oluşturulur; yönetici ve demo kullanıcı şifreleri konsola bir kez yazılır.
+Uygulama <http://localhost:5080> adresinde açılır; geliştirme ortamında demo verisi otomatik oluşturulur
+ve şu hazır hesaplar kullanılabilir (yalnızca yerel geliştirme içindir, `appsettings.Development.json`):
+
+| Kullanıcı | Şifre |
+| --- | --- |
+| Hasta portalı: T.C. `10000000146` | `Klinova-Demo-1` |
+| `admin` | `Klinova-Admin-1` (ilk girişte değiştirilir) |
+| `kabul`, `hekim`, `vezne` | `Klinova-Demo-1` |
+
+Baştan başlamak için `src/Klinova.Web/data` klasörünü silin.
 
 </details>
 
@@ -254,7 +261,7 @@ oluşturulur; yönetici ve demo kullanıcı şifreleri konsola bir kez yazılır
 
 Sağlık verisi, KVKK kapsamında **özel nitelikli kişisel veridir**. Klinova bu sorumluluk gözetilerek tasarlandı:
 
-- 🔐 **Varsayılan şifre yok.** İlk yönetici şifresi kurulumda belirlenir veya rastgele üretilir; ilk girişte değiştirilmesi zorunludur.
+- 🔐 **Varsayılan şifre yok.** İlk yönetici şifresi kurulumda belirlenmek zorundadır, hiçbir log'a yazılmaz ve ilk girişte değiştirilmesi zorunludur.
 - 🔒 Şifreler geri döndürülemez şekilde (hash) saklanır. 5 hatalı denemede hesap kilitlenir, giriş ve kayıt denemeleri sınırlandırılır.
 - 🪪 **Portal hesabı ele geçirmeye karşı koruma:** T.C. Kimlik No, ad ve doğum tarihi gizli bilgi olmadığından, mevcut hasta dosyasına bağlanmak için kurumda kayıtlı telefon numarasının da eşleşmesi gerekir.
 - 👥 Rol bazlı yetkilendirme; hasta ve personel alanları birbirinden tamamen ayrıdır.
@@ -275,7 +282,7 @@ Güvenlik açığı bulduysanız lütfen herkese açık issue açmayın; [SECURI
 | **Veritabanı** | SQLite (varsayılan) veya SQL Server; şema migration'larla otomatik ve veri kaybetmeden güncellenir |
 | **Arka plan işleri** | Bildirim gönderimi, randevu hatırlatma, "gelmedi" işaretleme, bekleme listesi süresi |
 | **Mimari** | Katmanlı yapı: `Domain` → `Application` → `Infrastructure` → `Web` |
-| **Kalite** | 183 otomatik test (birim, entegrasyon, uçtan uca HTTP), CI, CodeQL, Dependabot |
+| **Kalite** | 186 otomatik test (birim, entegrasyon, uçtan uca HTTP), CI, CodeQL, Dependabot |
 | **Dağıtım** | Docker imajı (root olmayan kullanıcı), docker compose, IIS, systemd |
 
 Ayrıntılar: [Mimari](docs/architecture.md) · [Yapılandırma](docs/configuration.md) · [Geliştirme](docs/development.md)
@@ -304,11 +311,11 @@ Hayır. MIT lisansı ile tamamen ücretsizdir; kurumunuzda kullanabilir, değiş
 </details>
 
 <details>
-<summary><b>SMS gönderebilir mi?</b></summary>
+<summary><b>SMS sağlayıcısı gerekli mi?</b></summary>
 
-Evet. SMS operatörünüzün HTTP API'sine bağlanan bir webhook adresi tanımlarsınız
-([yapılandırma](docs/configuration.md#bildirimler)). E-posta için SMTP sunucusu kullanılır.
-Sağlayıcı tanımlanmamışsa mesajlar yalnızca bildirim ekranında görünür.
+Gerekmez: portal hesabı olan hastalar tüm mesajları hasta portalındaki **Bildirimlerim** bölümünde görür.
+İsterseniz SMS operatörünüzün HTTP API'sine bağlanan bir webhook adresi ve/veya SMTP sunucusu tanımlayarak
+aynı mesajları SMS ve e-posta ile de gönderebilirsiniz ([yapılandırma](docs/configuration.md#bildirimler)).
 </details>
 
 <details>

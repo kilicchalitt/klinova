@@ -56,17 +56,22 @@ Kurum personeli, gelmeme kısıtlaması olan hastalara da telefonla / danışmad
 
 ## Bildirimler
 
-`Klinova:Notifications` bölümü SMS ve e-posta sağlayıcılarını tanımlar. Mesajlar önce veritabanındaki
-gönderim kuyruğuna yazılır, arka plan işi tarafından gönderilir; başarısız olanlar 5 kez yeniden denenir
-ve **Yönetim → Bildirimler** ekranından izlenir.
+Hasta portalı hesabı olan hastalar tüm mesajları (randevu onayı, hatırlatma, iptal, bekleme listesi)
+portaldaki **Bildirimlerim** bölümünde görür; bunun için hiçbir sağlayıcı gerekmez. Okunmamış bildirimler
+menüde sayıyla gösterilir.
+
+`Klinova:Notifications` bölümü isteğe bağlı SMS ve e-posta sağlayıcılarını tanımlar. Bir sağlayıcı
+tanımlanmadıkça o kanal için mesaj oluşturulmaz. Mesajlar önce veritabanındaki gönderim kuyruğuna yazılır,
+arka plan işi tarafından gönderilir; başarısız olanlar 5 kez yeniden denenir ve **Yönetim → Bildirimler**
+ekranından izlenir.
 
 | Anahtar | Varsayılan | Açıklama |
 | --- | --- | --- |
-| `Email:Enabled` | `false` | `true` ise e-postalar SMTP ile gönderilir; değilse yalnızca kaydedilir. |
+| `Email:Enabled` | `false` | `true` ise e-postalar SMTP ile gönderilir; `false` ise e-posta oluşturulmaz. |
 | `Email:Host`, `Email:Port`, `Email:EnableSsl` | — / `587` / `true` | SMTP sunucusu. |
 | `Email:UserName`, `Email:Password` | — | SMTP kimlik bilgileri (**ortam değişkeni olarak verin**). |
 | `Email:From`, `Email:FromName` | — / `Klinova` | Gönderen adresi ve adı. |
-| `Sms:Provider` | `Log` | `Log` (gönderilmez, kaydedilir) veya `Webhook`. |
+| `Sms:Provider` | `Log` | `Log` (SMS kanalı kapalı) veya `Webhook`. |
 | `Sms:WebhookUrl` | — | `POST {"to": "...", "message": "..."}` kabul eden HTTPS adresi. SMS operatörünüzün API'sine bağlanan küçük bir ara servis kullanın. |
 | `Sms:ApiKey` | — | Webhook'a `X-Api-Key` başlığıyla gönderilir (**ortam değişkeni olarak verin**). |
 
@@ -95,9 +100,9 @@ içerebileceği için yalnızca `Debug` düzeyinde loglanır.
 | --- | --- | --- |
 | `Klinova:Seed:AdminUserName` | `admin` | Hiç yönetici yoksa oluşturulacak hesabın kullanıcı adı. |
 | `Klinova:Seed:AdminEmail` | `admin@klinova.local` | |
-| `Klinova:Seed:AdminPassword` | *(boş)* | Boşsa güçlü bir şifre rastgele üretilir ve **bir kez** loga yazılır. Her durumda ilk girişte değiştirilmesi zorunludur. |
-| `Klinova:Seed:DemoData` | `false` (Development'ta `true`) | Örnek hekimler, hastalar ve `kabul`, `hekim`, `vezne` demo kullanıcıları. Üretimde kapalı tutun. |
-| `Klinova:Seed:DemoPassword` | *(boş)* | Demo kullanıcıların ortak şifresi; boşsa rastgele üretilir ve loga yazılır. |
+| `Klinova:Seed:AdminPassword` | *(boş)* | **Henüz yönetici yoksa zorunludur;** verilmezse uygulama açıklayıcı bir mesajla durur. Şifre hiçbir yere loglanmaz ve ilk girişte değiştirilmesi zorunludur. Yönetici oluşturulduktan sonra bu ayarı kaldırabilirsiniz. |
+| `Klinova:Seed:DemoData` | `false` (Development'ta `true`) | Örnek şubeler, hekimler, hastalar, randevular, `kabul`, `hekim`, `vezne` demo kullanıcıları ve T.C. `10000000146` ile hasta portalı hesabı. Üretimde kapalı tutun. |
+| `Klinova:Seed:DemoPassword` | *(boş)* | Demo kullanıcıların ve demo hastanın ortak şifresi; demo verisi açıksa zorunludur. |
 
 Varsayılan kurum (şube), poliklinikler, fiyat listesi ve içinde bulunulan ile sonraki yılın sabit tarihli
 millî bayramları, ilgili tablolar boşsa her ortamda oluşturulur. Demo verisi ayrıca ikinci bir şube,

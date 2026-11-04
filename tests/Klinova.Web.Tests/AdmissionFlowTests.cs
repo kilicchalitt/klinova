@@ -11,28 +11,28 @@ public sealed class AdmissionFlowTests(KlinovaWebFactory factory) : IClassFixtur
         await KlinovaWebFactory.SignInAsync(client, "kabul", KlinovaWebFactory.DemoPassword);
 
         var token = await KlinovaWebFactory.GetAntiforgeryTokenAsync(client, "/Patients/Create");
-        var register = await client.PostAsync("/Patients/Create", new FormUrlEncodedContent(new Dictionary<string, string>
+        var register = await client.PostFormAsync("/Patients/Create", new Dictionary<string, string>
         {
             ["Input.FirstName"] = "Entegrasyon",
             ["Input.LastName"] = "Testi",
-            ["Input.NationalId"] = "10000000146",
+            ["Input.NationalId"] = "10000000078",
             ["Input.BirthDate"] = "1990-05-17",
             ["AdmitAfterSave"] = "true",
             ["__RequestVerificationToken"] = token,
-        }));
+        });
 
         Assert.Equal(HttpStatusCode.Redirect, register.StatusCode);
         var admitPath = register.Headers.Location!.OriginalString;
         Assert.StartsWith("/Visits/Admit/", admitPath, StringComparison.Ordinal);
 
         token = await KlinovaWebFactory.GetAntiforgeryTokenAsync(client, admitPath);
-        var admit = await client.PostAsync(admitPath, new FormUrlEncodedContent(new Dictionary<string, string>
+        var admit = await client.PostFormAsync(admitPath, new Dictionary<string, string>
         {
             ["Input.PolyclinicId"] = "1",
             ["Input.Complaint"] = "Kontrol",
             ["printSlip"] = "false",
             ["__RequestVerificationToken"] = token,
-        }));
+        });
 
         Assert.Equal(HttpStatusCode.Redirect, admit.StatusCode);
         Assert.StartsWith("/Visits/Details/", admit.Headers.Location!.OriginalString, StringComparison.Ordinal);

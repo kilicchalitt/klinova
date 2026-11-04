@@ -9,6 +9,10 @@ public enum NotificationChannel
 
     [Display(Name = "E-posta")]
     Email = 1,
+
+    /// <summary>Shown to the patient under "Bildirimlerim" in the patient portal; needs no provider.</summary>
+    [Display(Name = "Hasta Portalı")]
+    Portal = 2,
 }
 
 public enum NotificationStatus
@@ -70,6 +74,9 @@ public class Notification
 
     public DateTime? SentAtUtc { get; set; }
 
+    /// <summary>When the patient opened the message in the portal (portal channel only).</summary>
+    public DateTime? ReadAtUtc { get; set; }
+
     public void MarkSent(DateTime nowUtc)
     {
         Status = NotificationStatus.Sent;
@@ -77,6 +84,8 @@ public class Notification
         Attempts++;
         LastError = null;
     }
+
+    public void MarkRead(DateTime nowUtc) => ReadAtUtc ??= nowUtc;
 
     public void MarkFailed(string error)
     {
