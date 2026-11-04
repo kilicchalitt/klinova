@@ -212,11 +212,61 @@ public sealed class DatabaseInitializer(
         await db.SaveChangesAsync(ct);
 
         await SeedDemoAppointmentsAsync(patients, doctors, ct);
+        await SeedDemoPortalPatientAsync(password, doctors[1], ct);
 
         if (string.IsNullOrWhiteSpace(_options.Seed.DemoPassword))
         {
             logger.LogWarning("Demo users 'kabul', 'hekim' and 'vezne' created. Shared demo password: {Password}", password);
         }
+    }
+
+    /// <summary>
+    /// A ready-to-use patient portal account so that the portal can be tried without registering.
+    /// 10000000146 is the widely published example number with valid check digits.
+    /// </summary>
+    private async Task SeedDemoPortalPatientAsync(string password, Doctor doctor, CancellationToken ct)
+    {
+        const string nationalId = "10000000146";
+        if (await db.Patients.AnyAsync(p => p.NationalId == nationalId, ct))
+        {
+            return;
+        }
+
+        var user = await CreateUserAsync(nationalId, "hasta@klinova.local", "Elif Şahin", password, Roles.Patient, mustChangePassword: false);
+        var patient = new Patient
+        {
+            FirstName = "Elif",
+            LastName = "Şahin",
+            NationalId = nationalId,
+            Gender = Gender.Female,
+            BirthDate = new DateOnly(1990, 5, 17),
+            Phone = "0555 000 00 06",
+            InsuranceType = InsuranceType.SocialSecurity,
+            UserId = user.Id,
+            PortalConsentAtUtc = clock.UtcNow,
+        };
+        patient.RefreshSearchName();
+        db.Patients.Add(patient);
+        await db.SaveChangesAsync(ct);
+
+        try
+        {
+            var availability = services.GetRequiredService<AvailabilityService>();
+            var slots = await availability.GetFreeSlotsAsync(doctor.PolyclinicId, doctor.Id, clock.Today.AddDays(1), clock.Today.AddDays(10), online: true, ct);
+            if (slots.Count > 3)
+            {
+                await services.GetRequiredService<AppointmentService>().BookAsync(
+                    new BookingRequest { PatientId = patient.Id, DoctorId = doctor.Id, Date = slots[3].Date, StartTime = slots[3].Start, Note = "Kontrol randevusu." },
+                    AppointmentChannel.Online,
+                    ct);
+            }
+        }
+        catch (Domain.Common.DomainException ex)
+        {
+            logger.LogWarning(ex, "Demo portal appointment could not be created.");
+        }
+
+        logger.LogInformation("Demo accounts ready. Staff: admin, kabul, hekim, vezne. Patient portal: T.C. {NationalId}.", nationalId);
     }
 
     /// <summary>Books a few appointments on the next working day so the calendars are not empty.</summary>

@@ -15,7 +15,7 @@ public sealed class AdmissionFlowTests(KlinovaWebFactory factory) : IClassFixtur
         {
             ["Input.FirstName"] = "Entegrasyon",
             ["Input.LastName"] = "Testi",
-            ["Input.NationalId"] = "10000000146",
+            ["Input.NationalId"] = "10000000078",
             ["Input.BirthDate"] = "1990-05-17",
             ["AdmitAfterSave"] = "true",
             ["__RequestVerificationToken"] = token,

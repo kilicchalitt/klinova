@@ -62,6 +62,26 @@ public sealed partial class PortalTests(KlinovaWebFactory factory) : IClassFixtu
     }
 
     [Fact]
+    public async Task DemoPortalPatient_CanSignInAndSeeAppointmentAndNotification()
+    {
+        var client = factory.CreateBrowser();
+        var token = await KlinovaWebFactory.GetAntiforgeryTokenAsync(client, "/Portal/Login");
+        var login = await client.PostAsync("/Portal/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["Input.NationalId"] = "10000000146",
+            ["Input.Password"] = KlinovaWebFactory.DemoPassword,
+            ["__RequestVerificationToken"] = token,
+        }));
+        Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
+        Assert.Equal("/Portal", login.Headers.Location!.OriginalString);
+
+        var appointments = await (await client.GetAsync("/Portal/Appointments")).Content.ReadAsStringAsync();
+        Assert.Contains("Kontrol randevusu.", appointments, StringComparison.Ordinal);
+        var inbox = await (await client.GetAsync("/Portal/Notifications")).Content.ReadAsStringAsync();
+        Assert.Contains("Randevu onayı", inbox, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task NewPatient_RegistersBooksAndSeesTheAppointment()
     {
         var client = factory.CreateBrowser();
