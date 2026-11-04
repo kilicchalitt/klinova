@@ -14,6 +14,7 @@ public static class WebServiceCollectionExtensions
     {
         services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, KlinovaClaimsPrincipalFactory>();
         services.AddScoped<UserAdministration>();
+        services.AddScoped<PortalAccounts>();
 
         services.ConfigureApplicationCookie(o =>
         {
@@ -26,6 +27,27 @@ public static class WebServiceCollectionExtensions
             o.AccessDeniedPath = "/Account/AccessDenied";
             o.ExpireTimeSpan = TimeSpan.FromHours(10);
             o.SlidingExpiration = true;
+
+            // Patients sign in and land in the portal, staff in the staff application.
+            o.Events.OnRedirectToLogin = context =>
+            {
+                if (context.Request.Path.StartsWithSegments("/Portal", StringComparison.OrdinalIgnoreCase))
+                {
+                    var returnUrl = context.Request.PathBase + context.Request.Path + context.Request.QueryString;
+                    context.Response.Redirect("/Portal/Login?ReturnUrl=" + Uri.EscapeDataString(returnUrl));
+                }
+                else
+                {
+                    context.Response.Redirect(context.RedirectUri);
+                }
+
+                return Task.CompletedTask;
+            };
+            o.Events.OnRedirectToAccessDenied = context =>
+            {
+                context.Response.Redirect(context.HttpContext.User.IsInRole(Application.Common.Roles.Patient) ? "/Portal" : context.RedirectUri);
+                return Task.CompletedTask;
+            };
         });
 
         // Deactivated users and changed passwords take effect within minutes.
@@ -38,7 +60,8 @@ public static class WebServiceCollectionExtensions
                 o.AddPolicy(name, p => p.RequireRole(roles));
             }
 
-            o.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+            // Everything not explicitly opened up is reserved for staff.
+            o.FallbackPolicy = o.GetPolicy(Policies.Staff);
         });
 
         services.AddAntiforgery(o =>
@@ -50,8 +73,23 @@ public static class WebServiceCollectionExtensions
         services
             .AddRazorPages(o =>
             {
+                o.Conventions.AllowAnonymousToPage("/Index");
                 o.Conventions.AllowAnonymousToPage("/Account/Login");
+                o.Conventions.AllowAnonymousToPage("/Account/AccessDenied");
                 o.Conventions.AllowAnonymousToPage("/Error");
+                o.Conventions.AuthorizePage("/Account/Logout");
+                o.Conventions.AuthorizePage("/Account/ChangePassword");
+
+                o.Conventions.AuthorizeFolder("/Portal", Policies.Patient);
+                o.Conventions.AllowAnonymousToPage("/Portal/Index");
+                o.Conventions.AllowAnonymousToPage("/Portal/Login");
+                o.Conventions.AllowAnonymousToPage("/Portal/Register");
+                o.Conventions.AllowAnonymousToPage("/Portal/Privacy");
+                o.Conventions.AllowAnonymousToPage("/Portal/Book"); // anyone may browse free slots; booking requires sign-in
+
+                o.Conventions.AuthorizeFolder("/Appointments", Policies.AppointmentView);
+                o.Conventions.AuthorizePage("/Appointments/Book", Policies.AppointmentDesk);
+                o.Conventions.AuthorizePage("/Appointments/Waitlist", Policies.AppointmentDesk);
                 o.Conventions.AuthorizeFolder("/Admin", Policies.Administration);
                 o.Conventions.AuthorizeFolder("/Reports", Policies.Reporting);
                 o.Conventions.AuthorizeFolder("/Billing", Policies.Billing);

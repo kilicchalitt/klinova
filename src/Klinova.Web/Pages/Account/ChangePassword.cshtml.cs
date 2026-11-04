@@ -47,7 +47,7 @@ public class ChangePasswordModel(UserManager<AppUser> userManager, SignInManager
         await signInManager.RefreshSignInAsync(user);
 
         this.Success("Şifreniz değiştirildi.");
-        return RedirectToPage("/Index");
+        return User.IsInRole(Application.Common.Roles.Patient) ? RedirectToPage("/Portal/Index") : RedirectToPage("/Index");
     }
 
     public sealed class ChangePasswordInput

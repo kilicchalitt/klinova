@@ -20,6 +20,7 @@ public sealed partial class KlinovaWebFactory : WebApplicationFactory<Program>
         builder.UseSetting("ConnectionStrings:Default", $"Data Source={Path.Combine(_directory, "klinova.db")}");
         builder.UseSetting("Klinova:UseHttpsRedirection", "false");
         builder.UseSetting("Klinova:LoginRequestsPerMinute", "10000");
+        builder.UseSetting("Klinova:BackgroundJobs:Enabled", "false");
         builder.UseSetting("Klinova:DataProtectionKeysPath", Path.Combine(_directory, "keys"));
         builder.UseSetting("Klinova:Seed:AdminPassword", AdminPassword);
         builder.UseSetting("Klinova:Seed:DemoData", "true");

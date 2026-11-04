@@ -40,7 +40,11 @@ public sealed class UserAdministration(UserManager<AppUser> users, IClock clock,
 {
     public async Task<List<UserListItem>> ListAsync(CancellationToken ct = default)
     {
-        var all = await users.Users.AsNoTracking().OrderBy(u => u.FullName).ToListAsync(ct);
+        // Patient portal accounts are not staff and are managed by the patients themselves.
+        var patientIds = (await users.GetUsersInRoleAsync(Application.Common.Roles.Patient)).Select(u => u.Id).ToHashSet();
+        var all = (await users.Users.AsNoTracking().OrderBy(u => u.FullName).ToListAsync(ct))
+            .Where(u => !patientIds.Contains(u.Id))
+            .ToList();
         var result = new List<UserListItem>(all.Count);
         foreach (var u in all)
         {

@@ -21,7 +21,7 @@ public class LoginModel(SignInManager<AppUser> signInManager, UserManager<AppUse
     {
         if (User.Identity?.IsAuthenticated == true)
         {
-            return LocalRedirect(SafeReturnUrl());
+            return User.IsInRole(Application.Common.Roles.Patient) ? RedirectToPage("/Portal/Index") : LocalRedirect(SafeReturnUrl());
         }
 
         return Page();
@@ -48,7 +48,9 @@ public class LoginModel(SignInManager<AppUser> signInManager, UserManager<AppUse
             user.LastSignInAtUtc = clock.UtcNow;
             await userManager.UpdateAsync(user);
             logger.LogInformation("User {UserName} signed in.", user.UserName);
-            return LocalRedirect(SafeReturnUrl());
+            return await userManager.IsInRoleAsync(user, Application.Common.Roles.Patient)
+                ? RedirectToPage("/Portal/Index")
+                : LocalRedirect(SafeReturnUrl());
         }
 
         if (result.IsLockedOut)

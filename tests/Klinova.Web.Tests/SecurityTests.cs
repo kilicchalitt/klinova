@@ -13,9 +13,18 @@ public sealed class SecurityTests(KlinovaWebFactory factory) : IClassFixture<Kli
         Assert.Equal("Healthy", await response.Content.ReadAsStringAsync());
     }
 
+    [Fact]
+    public async Task SiteRoot_SendsVisitorsToThePatientPortal()
+    {
+        var response = await factory.CreateBrowser().GetAsync("/");
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/Portal", response.Headers.Location!.OriginalString);
+    }
+
     [Theory]
-    [InlineData("/")]
     [InlineData("/Patients")]
+    [InlineData("/Appointments")]
     [InlineData("/Admin/Users")]
     [InlineData("/Reports?handler=Csv")]
     public async Task ProtectedPages_RedirectAnonymousUsersToLogin(string path)
