@@ -1,0 +1,23 @@
+@page "{id:int}"
+@model Klinova.Web.Pages.Visits.SlipModel
+@{
+    Layout = "_PrintLayout";
+    var v = Model.Visit;
+    ViewData["Title"] = $"Sıra Fişi {v.QueueNumber}";
+    ViewData["BackUrl"] = Url.Page("Details", new { id = v.Id });
+    ViewData["AutoPrint"] = true;
+}
+<div class="sheet slip">
+    <h1>@Model.Institution.Name</h1>
+    <div class="muted">@v.Polyclinic!.Name @(string.IsNullOrEmpty(v.Polyclinic.Location) ? "" : $"· {v.Polyclinic.Location}")</div>
+    <div class="slip-number">@v.QueueNumber</div>
+    <div class="fw-semibold">@v.Patient!.FullName</div>
+    <div class="muted">Dosya No @v.Patient.FileNumber</div>
+    @if (v.Doctor is not null)
+    {
+        <div class="mt-2">@v.Doctor.FullName</div>
+    }
+    <hr />
+    <div class="muted">@Clock.ToLocal(v.CheckInAtUtc).ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture)</div>
+    <div class="small mt-2">Lütfen sıranız gelene kadar bekleme salonunda bekleyiniz.</div>
+</div>
