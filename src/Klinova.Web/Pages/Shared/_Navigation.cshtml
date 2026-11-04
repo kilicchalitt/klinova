@@ -8,6 +8,10 @@
 <nav class="sidebar-nav">
     <a class="nav-link @Active("/Index")" asp-page="/Index"><i class="bi bi-speedometer2"></i><span>Gösterge Paneli</span></a>
     <a class="nav-link @Active("/Patients")" asp-page="/Patients/Index"><i class="bi bi-people"></i><span>Hastalar</span></a>
+    @if (User.IsInAnyRole(Roles.Admin, Roles.Reception, Roles.Physician))
+    {
+        <a class="nav-link @Active("/Appointments")" asp-page="/Appointments/Index"><i class="bi bi-calendar-week"></i><span>Randevular</span></a>
+    }
     <a class="nav-link @Active("/Visits")" asp-page="/Visits/Index"><i class="bi bi-clipboard2-pulse"></i><span>Başvurular</span></a>
     @if (User.IsInAnyRole(Roles.Admin, Roles.Physician))
     {
@@ -24,11 +28,17 @@
     @if (isAdmin)
     {
         <div class="nav-section">Yönetim</div>
+        <a class="nav-link @Active("/Admin/Facilities")" asp-page="/Admin/Facilities/Index"><i class="bi bi-buildings"></i><span>Kurumlar ve Şubeler</span></a>
         <a class="nav-link @Active("/Admin/Polyclinics")" asp-page="/Admin/Polyclinics/Index"><i class="bi bi-hospital"></i><span>Poliklinikler</span></a>
         <a class="nav-link @Active("/Admin/Doctors")" asp-page="/Admin/Doctors/Index"><i class="bi bi-person-vcard"></i><span>Hekimler</span></a>
+        <a class="nav-link @Active("/Admin/Schedules")" asp-page="/Admin/Schedules"><i class="bi bi-calendar3"></i><span>Çalışma Takvimleri</span></a>
+        <a class="nav-link @Active("/Admin/Holidays")" asp-page="/Admin/Holidays"><i class="bi bi-calendar-x"></i><span>Resmî Tatiller</span></a>
         <a class="nav-link @Active("/Admin/Services")" asp-page="/Admin/Services/Index"><i class="bi bi-tags"></i><span>Fiyat Listesi</span></a>
         <a class="nav-link @Active("/Admin/Users")" asp-page="/Admin/Users/Index"><i class="bi bi-person-gear"></i><span>Kullanıcılar</span></a>
         <a class="nav-link @Active("/Admin/Settings")" asp-page="/Admin/Settings"><i class="bi bi-building-gear"></i><span>Kurum Ayarları</span></a>
+        <a class="nav-link @Active("/Admin/Notifications")" asp-page="/Admin/Notifications"><i class="bi bi-chat-dots"></i><span>Bildirimler</span></a>
         <a class="nav-link @Active("/Admin/AuditLogs")" asp-page="/Admin/AuditLogs"><i class="bi bi-journal-text"></i><span>İşlem Kayıtları</span></a>
     }
+    <div class="nav-section">Hasta Portalı</div>
+    <a class="nav-link" asp-page="/Portal/Index" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i><span>Online Randevu Sayfası</span></a>
 </nav>

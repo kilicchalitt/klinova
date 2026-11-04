@@ -20,6 +20,7 @@
             @if (!p.IsArchived)
             {
                 <a asp-page="/Visits/Admit" asp-route-patientId="@p.Id" class="btn btn-primary"><i class="bi bi-clipboard-plus me-1"></i>Poliklinik Kabul</a>
+                <a asp-page="/Appointments/Book" asp-route-patientId="@p.Id" class="btn btn-outline-primary"><i class="bi bi-calendar-plus me-1"></i>Randevu Ver</a>
             }
             <a asp-page="Edit" asp-route-id="@p.Id" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Düzenle</a>
             <form method="post" asp-page-handler="Archive" asp-route-id="@p.Id">
@@ -69,10 +70,43 @@
         {
             <div class="card mb-3"><div class="card-header">Notlar</div><div class="card-body">@p.Notes</div></div>
         }
-        <p class="small text-body-secondary">Kayıt: @Clock.ToLocal(p.CreatedAtUtc).ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture) · @p.CreatedBy</p>
+        <p class="small text-body-secondary">
+            Kayıt: @Clock.ToLocal(p.CreatedAtUtc).ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture) · @p.CreatedBy
+            @if (Model.HasPortalAccount) { <br /><i class="bi bi-globe2 text-success me-1"></i><span>Hasta portalı hesabı var</span> }
+        </p>
     </div>
 
     <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-calendar-week me-2"></i>Randevular</div>
+            @if (Model.Appointments.Count == 0)
+            {
+                <div class="card-body text-body-secondary small">Randevu kaydı yok.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead><tr><th>Tarih</th><th>Poliklinik / Hekim</th><th>Kanal</th><th>Durum</th></tr></thead>
+                        <tbody>
+                            @foreach (var a in Model.Appointments)
+                            {
+                                <tr>
+                                    <td class="text-nowrap">@a.Date.ShortDate() @a.StartTime.ToString("HH:mm", CultureInfo.InvariantCulture)</td>
+                                    <td>@a.PolyclinicName<div class="small text-body-secondary">@a.DoctorName</div></td>
+                                    <td class="small">@(a.Channel == Klinova.Domain.Appointments.AppointmentChannel.Online ? "Online" : "Kurum")</td>
+                                    <td><span class="badge rounded-pill text-bg-light border">@a.Status.DisplayName()</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            @foreach (var w in Model.Waiting)
+            {
+                <div class="card-footer small"><i class="bi bi-hourglass-split me-1"></i>Bekleme listesinde: @w.PolyclinicName (@w.LatestDate.ShortDate() tarihine kadar)</div>
+            }
+        </div>
         <div class="card">
             <div class="card-header"><i class="bi bi-clock-history me-2"></i>Başvuru Geçmişi</div>
             @if (Model.Visits.Count == 0)

@@ -1,0 +1,37 @@
+@page
+@model Klinova.Web.Pages.Appointments.WaitlistModel
+@{
+    ViewData["Title"] = "Bekleme Listesi";
+    var tr = CultureInfo.GetCultureInfo("tr-TR");
+}
+<partial name="_PageHeader" model='new PageHeaderModel("Randevu Bekleme Listesi", "Uygun randevu bulamayan hastalar. Bir randevu iptal edildiğinde sıradaki hastalara otomatik bildirim gönderilir.")' />
+<div class="card">
+    @if (Model.Items.Count == 0)
+    {
+        <div class="empty-state"><i class="bi bi-hourglass"></i>Bekleme listesinde hasta yok.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Kayıt</th><th>Hasta</th><th>Poliklinik / Hekim</th><th>Tarih Aralığı</th><th>Durum</th><th class="text-end">İşlem</th></tr></thead>
+                <tbody>
+                    @foreach (var w in Model.Items)
+                    {
+                        <tr>
+                            <td class="small">@Clock.ToLocal(w.CreatedAtUtc).ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture)</td>
+                            <td><a asp-page="/Patients/Details" asp-route-id="@w.PatientId" class="text-reset fw-medium">@w.PatientName</a><div class="small text-body-secondary">@w.PatientPhone</div></td>
+                            <td>@w.PolyclinicName<div class="small text-body-secondary">@(w.DoctorName ?? "Herhangi bir hekim") · @w.FacilityName</div></td>
+                            <td class="small">@w.EarliestDate.ToString("d MMM", tr) – @w.LatestDate.ToString("d MMM yyyy", tr)</td>
+                            <td><span class="badge rounded-pill @(w.Status == Klinova.Domain.Appointments.WaitlistStatus.Notified ? "text-bg-info" : "text-bg-warning")">@w.Status.DisplayName()</span></td>
+                            <td class="text-end text-nowrap">
+                                <a asp-page="Book" asp-route-patientId="@w.PatientId" asp-route-polyclinicId="@w.PolyclinicId" class="btn btn-sm btn-primary">Randevu Ver</a>
+                                <form method="post" asp-page-handler="Withdraw" asp-route-id="@w.Id" class="d-inline"><button class="btn btn-sm btn-light" data-confirm="Kayıt listeden çıkarılsın mı?">Çıkar</button></form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

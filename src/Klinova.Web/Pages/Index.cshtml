@@ -9,7 +9,13 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Hoş geldiniz, @User.DisplayName()</h1>
-        <p class="page-subtitle">Bugünün özeti · @s.Day.ShortDate()</p>
+        <p class="page-subtitle">
+            Bugünün özeti · @s.Day.ShortDate()
+            @if (s.AppointmentsToday > 0)
+            {
+                <a asp-page="/Appointments/Index" class="ms-1">· @s.AppointmentsToday randevu (@s.AppointmentsCheckedIn geldi, @s.AppointmentsWaiting bekleniyor)</a>
+            }
+        </p>
     </div>
     <div class="d-flex gap-2">
         @if (canAdmit)
