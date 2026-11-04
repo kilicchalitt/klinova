@@ -1,0 +1,13 @@
+@page
+@model Klinova.Web.Pages.Account.AccessDeniedModel
+@{
+    ViewData["Title"] = "Yetkisiz Erişim";
+}
+<div class="card">
+    <div class="empty-state">
+        <i class="bi bi-shield-lock"></i>
+        <h1 class="h4">Bu sayfaya erişim yetkiniz yok</h1>
+        <p>Yetkinizin olması gerektiğini düşünüyorsanız sistem yöneticinizle iletişime geçin.</p>
+        <a asp-page="/Index" class="btn btn-primary">Gösterge paneline dön</a>
+    </div>
+</div>
