@@ -1,0 +1,84 @@
+@page "{id?}"
+@model Klinova.Web.Pages.Admin.Users.EditModel
+@{
+    ViewData["Title"] = Model.IsNew ? "Yeni Kullanıcı" : "Kullanıcıyı Düzenle";
+}
+<partial name="_PageHeader" model='new PageHeaderModel((string)ViewData["Title"]!, Model.IsNew ? "Hesap için geçici bir şifre üretilir ve ilk girişte değiştirilmesi istenir." : null)' />
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Input.FullName" class="form-label required-mark"></label>
+                            <input asp-for="Input.FullName" class="form-control" autofocus />
+                            <span asp-validation-for="Input.FullName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Input.UserName" class="form-label required-mark"></label>
+                            <input asp-for="Input.UserName" class="form-control" autocomplete="off" />
+                            <span asp-validation-for="Input.UserName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Input.Email" class="form-label"></label>
+                            <input asp-for="Input.Email" class="form-control" />
+                            <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label required-mark">Roller</label>
+                            @foreach (var role in Roles.All)
+                            {
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="Input.Roles" value="@role" id="role-@role" checked="@Model.Input.Roles.Contains(role)" />
+                                    <label class="form-check-label" for="role-@role">
+                                        <strong>@Roles.DisplayName(role)</strong>
+                                        <span class="text-body-secondary small">
+                                            @(role switch
+                                            {
+                                                Roles.Admin => "— tüm modüller, kullanıcı ve kurum ayarları",
+                                                Roles.Reception => "— hasta kaydı, poliklinik kabul, tahsilat",
+                                                Roles.Physician => "— muayene listesi, muayene kaydı, hizmet ekleme",
+                                                Roles.Cashier => "— tahsilat, makbuz ve gelir raporları",
+                                                _ => "",
+                                            })
+                                        </span>
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                        @if (!Model.IsNew)
+                        {
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input asp-for="Input.IsActive" class="form-check-input" role="switch" />
+                                    <label asp-for="Input.IsActive" class="form-check-label">Hesap aktif (pasif hesaplar giriş yapamaz)</label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Kaydet</button>
+                        <a asp-page="Index" class="btn btn-link">Vazgeç</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @if (!Model.IsNew)
+    {
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header"><i class="bi bi-key me-2"></i>Şifre Sıfırlama</div>
+                <div class="card-body">
+                    <p class="small text-body-secondary">Yeni bir geçici şifre üretilir, hesap kilidi açılır ve kullanıcıdan ilk girişte şifresini değiştirmesi istenir.</p>
+                    <form method="post" asp-page-handler="ResetPassword" asp-route-id="@Model.Id">
+                        <button type="submit" class="btn btn-outline-danger" data-confirm="Kullanıcının şifresi sıfırlansın mı?"><i class="bi bi-arrow-repeat me-1"></i>Şifreyi Sıfırla</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
