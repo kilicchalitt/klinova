@@ -80,7 +80,7 @@
         {
             <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
                 <span><span class="fw-medium">@f.Name</span> <span class="text-body-secondary">· @f.District / @f.City</span></span>
-                <span class="small text-body-secondary">@f.Address @(string.IsNullOrEmpty(f.Phone) ? "" : $"· {f.Phone}")</span>
+                <span class="small text-body-secondary">@string.Join(" · ", new[] { f.Address, f.Phone }.Where(x => !string.IsNullOrWhiteSpace(x)))</span>
             </li>
         }
     </ul>
