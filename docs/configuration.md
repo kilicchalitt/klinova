@@ -33,6 +33,62 @@ Ortam değişkenlerinde hiyerarşi `__` (çift alt çizgi) ile ifade edilir:
 | `Klinova:KnownProxies` | `[]` | Güvenilen ters vekil sunucu IP adresleri (`X-Forwarded-*` başlıkları için). |
 | `Klinova:LoginRequestsPerMinute` | `20` | Bir IP adresinden dakikada izin verilen giriş sayfası isteği. Tek NAT arkasındaki büyük kurumlarda artırın. |
 
+## Randevu Kuralları
+
+`Klinova:Appointments` bölümü online randevu kurallarını belirler. Varsayılanlar MHRS'den alışık
+olunan uygulamaya göre seçilmiştir.
+
+| Anahtar | Varsayılan | Açıklama |
+| --- | --- | --- |
+| `BookingHorizonDays` | `30` | Hastanın online olarak kaç gün ileriye randevu alabileceği. |
+| `StaffBookingHorizonDays` | `90` | Personelin (telefon / danışma) kaç gün ileriye randevu verebileceği. |
+| `MinimumLeadMinutes` | `60` | Online randevunun en az kaç dakika sonra başlaması gerektiği. |
+| `MaxActivePerPatient` | `5` | Bir hastanın aynı anda sahip olabileceği aktif online randevu sayısı. |
+| `MaxActivePerPolyclinic` | `1` | Aynı poliklinikte aynı anda aktif randevu sayısı (hem online hem personel). |
+| `CancellationDeadlineHours` | `2` | Hastanın randevudan kaç saat öncesine kadar online iptal / değişiklik yapabileceği. |
+| `NoShowRestrictionDays` | `15` | Gelmeme sonrası aynı poliklinikten online randevu kısıtlaması (gün). `0` kapatır. |
+| `NoShowsForGlobalRestriction` | `2` | Kısıtlama süresi içinde bu kadar gelmeme olursa tüm poliklinikler kısıtlanır. `0` kapatır. |
+| `ReminderHoursBefore` | `24` | Hatırlatma mesajının randevudan kaç saat önce gönderileceği. |
+| `MaxWaitlistEntriesPerPatient` | `3` | Hastanın aynı anda kaç bekleme listesi kaydı olabileceği. |
+| `WaitlistNotifyCount` | `3` | Bir randevu iptal edildiğinde bilgilendirilecek bekleyen hasta sayısı. |
+
+Kurum personeli, gelmeme kısıtlaması olan hastalara da telefonla / danışmadan randevu verebilir.
+
+## Bildirimler
+
+`Klinova:Notifications` bölümü SMS ve e-posta sağlayıcılarını tanımlar. Mesajlar önce veritabanındaki
+gönderim kuyruğuna yazılır, arka plan işi tarafından gönderilir; başarısız olanlar 5 kez yeniden denenir
+ve **Yönetim → Bildirimler** ekranından izlenir.
+
+| Anahtar | Varsayılan | Açıklama |
+| --- | --- | --- |
+| `Email:Enabled` | `false` | `true` ise e-postalar SMTP ile gönderilir; değilse yalnızca kaydedilir. |
+| `Email:Host`, `Email:Port`, `Email:EnableSsl` | — / `587` / `true` | SMTP sunucusu. |
+| `Email:UserName`, `Email:Password` | — | SMTP kimlik bilgileri (**ortam değişkeni olarak verin**). |
+| `Email:From`, `Email:FromName` | — / `Klinova` | Gönderen adresi ve adı. |
+| `Sms:Provider` | `Log` | `Log` (gönderilmez, kaydedilir) veya `Webhook`. |
+| `Sms:WebhookUrl` | — | `POST {"to": "...", "message": "..."}` kabul eden HTTPS adresi. SMS operatörünüzün API'sine bağlanan küçük bir ara servis kullanın. |
+| `Sms:ApiKey` | — | Webhook'a `X-Api-Key` başlığıyla gönderilir (**ortam değişkeni olarak verin**). |
+
+Örnek (Docker / systemd ortam değişkenleri):
+
+```bash
+Klinova__Notifications__Sms__Provider=Webhook
+Klinova__Notifications__Sms__WebhookUrl=https://sms-adapter.kurum.local/send
+Klinova__Notifications__Sms__ApiKey=********
+```
+
+Bilgi düzeyindeki loglara yalnızca mesaj türü ve maskelenmiş alıcı yazılır; mesaj metni hasta verisi
+içerebileceği için yalnızca `Debug` düzeyinde loglanır.
+
+## Arka Plan İşleri
+
+| Anahtar | Varsayılan | Açıklama |
+| --- | --- | --- |
+| `Klinova:BackgroundJobs:Enabled` | `true` | Bildirim gönderimi ve randevu bakımı. Birden fazla sunucu çalıştırıyorsanız yalnızca birinde açık tutun. |
+| `Klinova:BackgroundJobs:NotificationIntervalSeconds` | `30` | Gönderim kuyruğunun kontrol aralığı. |
+| `Klinova:BackgroundJobs:MaintenanceIntervalMinutes` | `10` | Hatırlatma, "gelmedi" işaretleme ve bekleme listesi süresi kontrol aralığı. |
+
 ## İlk Kurulum Verileri
 
 | Anahtar | Varsayılan | Açıklama |
@@ -43,7 +99,9 @@ Ortam değişkenlerinde hiyerarşi `__` (çift alt çizgi) ile ifade edilir:
 | `Klinova:Seed:DemoData` | `false` (Development'ta `true`) | Örnek hekimler, hastalar ve `kabul`, `hekim`, `vezne` demo kullanıcıları. Üretimde kapalı tutun. |
 | `Klinova:Seed:DemoPassword` | *(boş)* | Demo kullanıcıların ortak şifresi; boşsa rastgele üretilir ve loga yazılır. |
 
-Varsayılan poliklinikler ve fiyat listesi, ilgili tablolar boşsa her ortamda oluşturulur.
+Varsayılan kurum (şube), poliklinikler, fiyat listesi ve içinde bulunulan ile sonraki yılın sabit tarihli
+millî bayramları, ilgili tablolar boşsa her ortamda oluşturulur. Demo verisi ayrıca ikinci bir şube,
+hekimlerin hafta içi çalışma takvimi ve örnek randevular ekler.
 
 ## Günlükleme
 

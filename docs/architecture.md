@@ -19,9 +19,17 @@ tests/
 
 ```mermaid
 erDiagram
+    FACILITY ||--o{ POLYCLINIC : hosts
     PATIENT ||--o{ VISIT : has
+    PATIENT ||--o{ APPOINTMENT : books
+    PATIENT |o--o| USER : "portal account"
     POLYCLINIC ||--o{ VISIT : receives
     POLYCLINIC ||--o{ DOCTOR : employs
+    DOCTOR ||--o{ WORK_SCHEDULE : works
+    DOCTOR ||--o{ DOCTOR_LEAVE : "is on"
+    DOCTOR ||--o{ APPOINTMENT : "is booked for"
+    APPOINTMENT |o--o| VISIT : "checked in as"
+    POLYCLINIC ||--o{ WAITLIST_ENTRY : "is awaited in"
     DOCTOR |o--o{ VISIT : examines
     VISIT ||--o{ VISIT_ITEM : contains
     MEDICAL_SERVICE ||--o{ VISIT_ITEM : "priced from"
@@ -38,6 +46,11 @@ erDiagram
 | `Payment` | One per visit (unique index). Gross, discount, net, method, cashier. |
 | `AuditLog` | Who changed what, written automatically. |
 | `InstitutionProfile` | Single row with the details printed on receipts. |
+| `Facility` | A site (hospital, campus building, branch clinic) with province and district. |
+| `WorkSchedule`, `DoctorLeave`, `Holiday` | Weekly working blocks, leave and full / half-day holidays; expanded into free slots by `SlotCalculator`. |
+| `Appointment` | A booked slot with confirmation code, channel (online / desk), note to the physician and lifecycle (booked, checked in, cancelled, no-show). |
+| `WaitlistEntry` | A patient waiting for a slot in a polyclinic (optionally a physician) within a date range. |
+| `Notification` | Outbox entry for SMS / e-mail delivery with retries. |
 
 ### Visit lifecycle
 
@@ -56,6 +69,26 @@ stateDiagram-v2
     Cancelled --> [*]
 ```
 
+### Appointment lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Booked: book (portal or desk)
+    Booked --> Booked: reschedule (old one cancelled)
+    Booked --> CheckedIn: check-in → opens a Visit
+    Booked --> Cancelled: cancel (patient before deadline, staff anytime)
+    Booked --> NoShow: marked by staff or by the nightly job
+    Cancelled --> [*]: waiting list notified
+    CheckedIn --> [*]
+    NoShow --> [*]: online booking restricted
+```
+
+Booking rules live in `AppointmentService` and are configured by `AppointmentPolicy`
+(see [configuration](configuration.md#randevu-kuralları)). A filtered unique index on
+`(DoctorId, Date, StartTime)` for non-cancelled appointments prevents double booking.
+
+### Visit rules
+
 The rules live in `Visit` and are covered by `tests/Klinova.Domain.Tests/VisitTests.cs`:
 services cannot change once a visit is paid, a payment requires a completed visit with
 at least one service, discounts must be between zero and the gross total, etc.
@@ -72,8 +105,20 @@ at least one service, discounts must be between zero and the gross total, etc.
 | Price snapshot on visit items | Price-list changes do not rewrite history or issued receipts. |
 | Audit via `SaveChangesInterceptor` | Every change is captured without touching the use cases; audit rows share the transaction of the change. |
 | Business errors as `DomainException` | User-facing Turkish messages raised by the domain, shown as form errors or alerts by the web layer. |
+| Slots computed, not stored | Changing a schedule, adding leave or a holiday takes effect immediately; only appointments are persisted. |
+| Outbox for notifications | Messages are saved with the change that caused them and delivered asynchronously with retries; a failing SMS provider never breaks a booking. |
+| Portal in the same application, separated by policies | One deployment and one database; the fallback policy requires a staff role, the portal requires the patient role. |
 
-See also [ADR-0001](adr/0001-rewrite-as-web-application.md).
+See also [ADR-0001](adr/0001-rewrite-as-web-application.md) and [ADR-0002](adr/0002-appointments-and-patient-portal.md).
+
+## Background jobs
+
+Two hosted services run inside the web process (disable with `Klinova:BackgroundJobs:Enabled`):
+
+| Job | Interval | Work |
+| --- | --- | --- |
+| `NotificationDispatchWorker` | 30 s | Sends pending outbox messages through the configured SMS / e-mail senders. |
+| `AppointmentMaintenanceWorker` | 10 min | Marks missed appointments as no-show, queues reminders, expires waiting-list requests. |
 
 ## Request pipeline
 
@@ -89,7 +134,10 @@ See also [ADR-0001](adr/0001-rewrite-as-web-application.md).
 
 | Area | Policy | Roles |
 | --- | --- | --- |
-| Everything | Authenticated fallback policy | any signed-in user |
+| Everything not listed below | `Staff` (fallback policy) | Admin, Reception, Physician, Cashier |
+| `/Portal/*` (except landing, sign-in, registration, privacy notice and slot browsing) | `Patient` | Patient |
+| `/Appointments` | `AppointmentView` | Admin, Reception, Physician |
+| `/Appointments/Book`, `/Appointments/Waitlist` | `AppointmentDesk` | Admin, Reception |
 | `/Patients/Create`, `/Patients/Edit`, `/Visits/Admit` | `PatientRegistration` | Admin, Reception |
 | `/Worklist` | `ClinicalWork` | Admin, Physician |
 | `/Billing` | `Billing` | Admin, Cashier, Reception |
