@@ -10,6 +10,7 @@ public static class WebServiceCollectionExtensions
     public static IServiceCollection AddKlinovaWeb(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, KlinovaClaimsPrincipalFactory>();
+        services.AddScoped<UserAdministration>();
 
         services.ConfigureApplicationCookie(o =>
         {
