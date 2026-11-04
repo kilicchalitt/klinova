@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Klinova.Domain</RootNamespace>
+    <Description>Klinova domain model: entities, value rules and business invariants.</Description>
+  </PropertyGroup>
+
+</Project>
