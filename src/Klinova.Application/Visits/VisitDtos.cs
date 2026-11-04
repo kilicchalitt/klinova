@@ -6,7 +6,7 @@ namespace Klinova.Application.Visits;
 
 public sealed class AdmissionInput
 {
-    [Range(1, int.MaxValue, ErrorMessage = "Hasta seçiniz.")]
+    /// <summary>Taken from the route, not from the form.</summary>
     public int PatientId { get; set; }
 
     [Display(Name = "Poliklinik")]
