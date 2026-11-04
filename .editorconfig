@@ -43,6 +43,7 @@ dotnet_naming_style.underscore_camel.capitalization = camel_case
 
 # Analyzer tuning
 dotnet_diagnostic.CA1848.severity = none   # LoggerMessage delegates: not required for this code base
+dotnet_diagnostic.CA1873.severity = none   # Expensive logging arguments: negligible for this code base
 dotnet_diagnostic.CA1716.severity = none   # Identifiers matching keywords in other languages
 dotnet_diagnostic.CA1724.severity = none   # Type names conflicting with namespaces (Razor page models)
 dotnet_diagnostic.CA1062.severity = none   # Nullable reference types already cover argument null checks
