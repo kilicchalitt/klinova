@@ -56,17 +56,22 @@ Kurum personeli, gelmeme kısıtlaması olan hastalara da telefonla / danışmad
 
 ## Bildirimler
 
-`Klinova:Notifications` bölümü SMS ve e-posta sağlayıcılarını tanımlar. Mesajlar önce veritabanındaki
-gönderim kuyruğuna yazılır, arka plan işi tarafından gönderilir; başarısız olanlar 5 kez yeniden denenir
-ve **Yönetim → Bildirimler** ekranından izlenir.
+Hasta portalı hesabı olan hastalar tüm mesajları (randevu onayı, hatırlatma, iptal, bekleme listesi)
+portaldaki **Bildirimlerim** bölümünde görür; bunun için hiçbir sağlayıcı gerekmez. Okunmamış bildirimler
+menüde sayıyla gösterilir.
+
+`Klinova:Notifications` bölümü isteğe bağlı SMS ve e-posta sağlayıcılarını tanımlar. Bir sağlayıcı
+tanımlanmadıkça o kanal için mesaj oluşturulmaz. Mesajlar önce veritabanındaki gönderim kuyruğuna yazılır,
+arka plan işi tarafından gönderilir; başarısız olanlar 5 kez yeniden denenir ve **Yönetim → Bildirimler**
+ekranından izlenir.
 
 | Anahtar | Varsayılan | Açıklama |
 | --- | --- | --- |
-| `Email:Enabled` | `false` | `true` ise e-postalar SMTP ile gönderilir; değilse yalnızca kaydedilir. |
+| `Email:Enabled` | `false` | `true` ise e-postalar SMTP ile gönderilir; `false` ise e-posta oluşturulmaz. |
 | `Email:Host`, `Email:Port`, `Email:EnableSsl` | — / `587` / `true` | SMTP sunucusu. |
 | `Email:UserName`, `Email:Password` | — | SMTP kimlik bilgileri (**ortam değişkeni olarak verin**). |
 | `Email:From`, `Email:FromName` | — / `Klinova` | Gönderen adresi ve adı. |
-| `Sms:Provider` | `Log` | `Log` (gönderilmez, kaydedilir) veya `Webhook`. |
+| `Sms:Provider` | `Log` | `Log` (SMS kanalı kapalı) veya `Webhook`. |
 | `Sms:WebhookUrl` | — | `POST {"to": "...", "message": "..."}` kabul eden HTTPS adresi. SMS operatörünüzün API'sine bağlanan küçük bir ara servis kullanın. |
 | `Sms:ApiKey` | — | Webhook'a `X-Api-Key` başlığıyla gönderilir (**ortam değişkeni olarak verin**). |
 

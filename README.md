@@ -79,10 +79,10 @@ kurumun kendi randevu sisteminde uygular. Bütün kurallar kurum tarafından aya
 | Tekrarlayan gelmemelerde kısıtlama genişler | 15 gün içinde **2 gelmeme** → tüm polikliniklerden kısıtlama |
 | Aynı branşta aynı anda tek aktif randevu | Poliklinik başına **1** aktif randevu, hasta başına toplam **5** |
 | Randevu belirli süre öncesine kadar iptal edilebilir | Randevudan **2 saat** öncesine kadar online iptal/değişiklik |
-| Uygun randevu yoksa bekleme listesi | Bekleme listesi; iptal edilen saat **ilk 3 bekleyen** hastaya SMS ile bildirilir |
+| Uygun randevu yoksa bekleme listesi | Bekleme listesi; iptal edilen saat **ilk 3 bekleyen** hastaya bildirilir |
 | "Fark etmez" hekim seçimi, ilk uygun randevu | Hekim seçmeden tüm hekimlerin saatleri; **ilk uygun randevu** öne çıkarılır |
 | Hekime not | Hasta randevu alırken hekime not bırakabilir |
-| Randevu hatırlatma | Randevudan **24 saat** önce SMS / e-posta hatırlatması |
+| Randevu hatırlatma | Randevudan **24 saat** önce portal bildirimi (tanımlıysa SMS / e-posta) |
 | İleri tarihli randevu | Online **30 gün**, kurum personeli **90 gün** ileriye randevu verebilir |
 
 **Klinova'nın ek olarak sağladıkları:** randevunun kabul, muayene, vezne ve raporlama ile aynı
@@ -138,8 +138,8 @@ blokları; tüm kuralların kurum tarafından ayarlanabilmesi ve verilerin kurum
 
 ### 🔔 Bildirimler
 - Randevu onayı, **24 saat önce hatırlatma**, iptal ve bekleme listesi mesajları
-- SMS (operatör API'si için HTTP webhook) ve e-posta (SMTP); sağlayıcı yoksa mesajlar kaydedilir
-- Gönderim kuyruğu, otomatik tekrar deneme ve yönetici ekranı
+- Hasta portalında **Bildirimlerim** bölümü ve okunmamış bildirim sayacı; ek sağlayıcı gerekmez
+- İsteğe bağlı SMS (operatör API'si için HTTP webhook) ve e-posta (SMTP), gönderim kuyruğu ve otomatik tekrar deneme
 
 ### 🗂️ Hasta Kayıt ve Kabul
 - T.C. Kimlik No **algoritmik doğrulama** ve **mükerrer kayıt engeli**
@@ -275,7 +275,7 @@ Güvenlik açığı bulduysanız lütfen herkese açık issue açmayın; [SECURI
 | **Veritabanı** | SQLite (varsayılan) veya SQL Server; şema migration'larla otomatik ve veri kaybetmeden güncellenir |
 | **Arka plan işleri** | Bildirim gönderimi, randevu hatırlatma, "gelmedi" işaretleme, bekleme listesi süresi |
 | **Mimari** | Katmanlı yapı: `Domain` → `Application` → `Infrastructure` → `Web` |
-| **Kalite** | 183 otomatik test (birim, entegrasyon, uçtan uca HTTP), CI, CodeQL, Dependabot |
+| **Kalite** | 185 otomatik test (birim, entegrasyon, uçtan uca HTTP), CI, CodeQL, Dependabot |
 | **Dağıtım** | Docker imajı (root olmayan kullanıcı), docker compose, IIS, systemd |
 
 Ayrıntılar: [Mimari](docs/architecture.md) · [Yapılandırma](docs/configuration.md) · [Geliştirme](docs/development.md)
@@ -304,11 +304,11 @@ Hayır. MIT lisansı ile tamamen ücretsizdir; kurumunuzda kullanabilir, değiş
 </details>
 
 <details>
-<summary><b>SMS gönderebilir mi?</b></summary>
+<summary><b>SMS sağlayıcısı gerekli mi?</b></summary>
 
-Evet. SMS operatörünüzün HTTP API'sine bağlanan bir webhook adresi tanımlarsınız
-([yapılandırma](docs/configuration.md#bildirimler)). E-posta için SMTP sunucusu kullanılır.
-Sağlayıcı tanımlanmamışsa mesajlar yalnızca bildirim ekranında görünür.
+Gerekmez: portal hesabı olan hastalar tüm mesajları hasta portalındaki **Bildirimlerim** bölümünde görür.
+İsterseniz SMS operatörünüzün HTTP API'sine bağlanan bir webhook adresi ve/veya SMTP sunucusu tanımlayarak
+aynı mesajları SMS ve e-posta ile de gönderebilirsiniz ([yapılandırma](docs/configuration.md#bildirimler)).
 </details>
 
 <details>

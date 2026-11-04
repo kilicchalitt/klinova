@@ -23,10 +23,13 @@ Hastalar sitenin ana adresine girdiğinde hasta portalı açılır.
    eşleştiğinde mevcut dosyaya bağlanır. Telefon numarası kayıtlı değilse hasta kabul biriminden eklenmelidir.
 2. **Randevu Al:** İl → kurum → poliklinik → hekim ("Fark etmez" ile tüm hekimler) seçilir. Boş saatler
    haftalık olarak listelenir, ilk uygun randevu ayrıca gösterilir. Saat seçilip istenirse hekime not
-   bırakılarak randevu onaylanır; randevu kodu ekranda ve SMS'te yer alır.
+   bırakılarak randevu onaylanır; randevu kodu ekranda ve Bildirimlerim bölümünde yer alır.
 3. **Uygun saat yoksa:** *Bekleme Listesine Yaz* ile hasta, seçtiği tarihe kadar bekleme listesine alınır.
-   Bir randevu iptal edildiğinde sıradaki bekleyenlere SMS gönderilir; boşalan saat ilk alan hastanındır.
-4. **Randevularım:** Yaklaşan randevular **değiştirilebilir** veya **iptal edilebilir** (varsayılan olarak
+   Bir randevu iptal edildiğinde sıradaki bekleyenlere bildirim gönderilir; boşalan saat ilk alan hastanındır.
+4. **Bildirimlerim:** Randevu onayı, bir gün önceki hatırlatma, iptaller ve bekleme listesi haberleri
+   burada görünür; okunmamış bildirim sayısı menüde gösterilir. Kurum SMS/e-posta sağlayıcısı tanımladıysa
+   aynı mesajlar ayrıca SMS/e-posta ile de gelir.
+5. **Randevularım:** Yaklaşan randevular **değiştirilebilir** veya **iptal edilebilir** (varsayılan olarak
    randevudan 2 saat öncesine kadar). Geçmiş randevular ve muayeneler de burada görünür.
 
 **Gelmeme kuralı:** Randevusuna gelmeyen ve iptal etmeyen hasta, aynı poliklinikten 15 gün online randevu

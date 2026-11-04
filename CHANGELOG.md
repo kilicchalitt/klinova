@@ -6,6 +6,16 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Patient portal inbox ("Bildirimlerim"): appointment confirmations, reminders, cancellations and
+  waiting-list messages are shown to patients in the portal with an unread counter. No SMS or e-mail
+  provider is required.
+
+### Changed
+
+- SMS and e-mail messages are only queued when the corresponding provider is configured.
+
 ## [2.0.0] - 2026-11-04
 
 Online appointments, patient portal and multi-facility support.
