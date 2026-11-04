@@ -17,6 +17,155 @@ namespace Klinova.Infrastructure.Persistence.Migrations.Sqlite
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.14");
 
+            modelBuilder.Entity("Klinova.Domain.Appointments.Appointment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CancelledAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("CancelledBy")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CheckedInAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConfirmationCode")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .IsUnicode(false)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PatientNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PolyclinicId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ReminderSentAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("RescheduledFromId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("VisitId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConfirmationCode");
+
+                    b.HasIndex("PolyclinicId");
+
+                    b.HasIndex("VisitId")
+                        .IsUnique();
+
+                    b.HasIndex("Date", "Status");
+
+                    b.HasIndex("PatientId", "Status");
+
+                    b.HasIndex("DoctorId", "Date", "StartTime")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Appointments_ActiveSlot")
+                        .HasFilter("[Status] <> 2");
+
+                    b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("Klinova.Domain.Appointments.WaitlistEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DoctorId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("EarliestDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("LatestDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("NotifiedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PolyclinicId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.HasIndex("PatientId", "Status");
+
+                    b.HasIndex("PolyclinicId", "Status");
+
+                    b.ToTable("WaitlistEntries");
+                });
+
             modelBuilder.Entity("Klinova.Domain.Auditing.AuditLog", b =>
                 {
                     b.Property<long>("Id")
@@ -103,6 +252,61 @@ namespace Klinova.Infrastructure.Persistence.Migrations.Sqlite
                     b.ToTable("Payments");
                 });
 
+            modelBuilder.Entity("Klinova.Domain.Notifications.Notification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PatientId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Recipient")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("SentAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId");
+
+                    b.HasIndex("Status", "CreatedAtUtc");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("Klinova.Domain.Organization.Doctor", b =>
                 {
                     b.Property<int>("Id")
@@ -169,10 +373,69 @@ namespace Klinova.Infrastructure.Persistence.Migrations.Sqlite
                     b.ToTable("Doctors");
                 });
 
+            modelBuilder.Entity("Klinova.Domain.Organization.Facility", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("District")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("City", "District");
+
+                    b.ToTable("Facilities");
+                });
+
             modelBuilder.Entity("Klinova.Domain.Organization.Polyclinic", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AcceptsOnlineAppointments")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAtUtc")
@@ -185,6 +448,9 @@ namespace Klinova.Infrastructure.Persistence.Migrations.Sqlite
                     b.Property<string>("Description")
                         .HasMaxLength(300)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
@@ -207,7 +473,7 @@ namespace Klinova.Infrastructure.Persistence.Migrations.Sqlite
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
+                    b.HasIndex("FacilityId", "Name")
                         .IsUnique();
 
                     b.ToTable("Polyclinics");
@@ -311,6 +577,9 @@ namespace Klinova.Infrastructure.Persistence.Migrations.Sqlite
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("PortalConsentAtUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("SearchName")
                         .IsRequired()
                         .HasMaxLength(101)
@@ -323,6 +592,10 @@ namespace Klinova.Infrastructure.Persistence.Migrations.Sqlite
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NationalId")
@@ -332,9 +605,142 @@ namespace Klinova.Infrastructure.Persistence.Migrations.Sqlite
 
                     b.HasIndex("SearchName");
 
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
                     b.HasIndex("LastName", "FirstName");
 
                     b.ToTable("Patients");
+                });
+
+            modelBuilder.Entity("Klinova.Domain.Scheduling.DoctorLeave", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId", "StartDate", "EndDate");
+
+                    b.ToTable("DoctorLeaves");
+                });
+
+            modelBuilder.Entity("Klinova.Domain.Scheduling.Holiday", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly?>("ClosedFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date")
+                        .IsUnique();
+
+                    b.ToTable("Holidays");
+                });
+
+            modelBuilder.Entity("Klinova.Domain.Scheduling.WorkSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsOnlineBookable")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SlotMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("ValidFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("ValidUntil")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId", "DayOfWeek");
+
+                    b.ToTable("WorkSchedules");
                 });
 
             modelBuilder.Entity("Klinova.Domain.Services.MedicalService", b =>
@@ -766,6 +1172,64 @@ namespace Klinova.Infrastructure.Persistence.Migrations.Sqlite
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Klinova.Domain.Appointments.Appointment", b =>
+                {
+                    b.HasOne("Klinova.Domain.Organization.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Klinova.Domain.Patients.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Klinova.Domain.Organization.Polyclinic", "Polyclinic")
+                        .WithMany()
+                        .HasForeignKey("PolyclinicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Klinova.Domain.Visits.Visit", null)
+                        .WithMany()
+                        .HasForeignKey("VisitId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
+
+                    b.Navigation("Polyclinic");
+                });
+
+            modelBuilder.Entity("Klinova.Domain.Appointments.WaitlistEntry", b =>
+                {
+                    b.HasOne("Klinova.Domain.Organization.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Klinova.Domain.Patients.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Klinova.Domain.Organization.Polyclinic", "Polyclinic")
+                        .WithMany()
+                        .HasForeignKey("PolyclinicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
+
+                    b.Navigation("Polyclinic");
+                });
+
             modelBuilder.Entity("Klinova.Domain.Billing.Payment", b =>
                 {
                     b.HasOne("Klinova.Domain.Visits.Visit", null)
@@ -784,6 +1248,39 @@ namespace Klinova.Infrastructure.Persistence.Migrations.Sqlite
                         .IsRequired();
 
                     b.Navigation("Polyclinic");
+                });
+
+            modelBuilder.Entity("Klinova.Domain.Organization.Polyclinic", b =>
+                {
+                    b.HasOne("Klinova.Domain.Organization.Facility", "Facility")
+                        .WithMany("Polyclinics")
+                        .HasForeignKey("FacilityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Facility");
+                });
+
+            modelBuilder.Entity("Klinova.Domain.Scheduling.DoctorLeave", b =>
+                {
+                    b.HasOne("Klinova.Domain.Organization.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+                });
+
+            modelBuilder.Entity("Klinova.Domain.Scheduling.WorkSchedule", b =>
+                {
+                    b.HasOne("Klinova.Domain.Organization.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
                 });
 
             modelBuilder.Entity("Klinova.Domain.Visits.Visit", b =>
@@ -876,6 +1373,11 @@ namespace Klinova.Infrastructure.Persistence.Migrations.Sqlite
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Klinova.Domain.Organization.Facility", b =>
+                {
+                    b.Navigation("Polyclinics");
                 });
 
             modelBuilder.Entity("Klinova.Domain.Organization.Polyclinic", b =>

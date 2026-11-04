@@ -240,6 +240,7 @@ public sealed class AuditSaveChangesInterceptor(ICurrentUser currentUser, IClock
         return entry.Entity switch
         {
             AuditLog => false,
+            Domain.Notifications.Notification => false,
             IdentityUserToken<string> or IdentityUserLogin<string> or IdentityUserClaim<string> or IdentityRoleClaim<string> => false,
             _ => true,
         };

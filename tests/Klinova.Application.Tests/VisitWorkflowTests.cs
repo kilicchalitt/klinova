@@ -101,7 +101,7 @@ public sealed class VisitWorkflowTests : IDisposable
     {
         var (polyclinic, _, _, patient) = await _db.SeedBasicsAsync();
         await using var ctx = _db.CreateContext();
-        var other = new Domain.Organization.Polyclinic { Name = "Göz" };
+        var other = new Domain.Organization.Polyclinic { Name = "Göz", FacilityId = polyclinic.FacilityId };
         ctx.Polyclinics.Add(other);
         await ctx.SaveChangesAsync();
         var own = new Domain.Organization.Doctor { FirstName = "Ece", LastName = "Kaya", PolyclinicId = polyclinic.Id };

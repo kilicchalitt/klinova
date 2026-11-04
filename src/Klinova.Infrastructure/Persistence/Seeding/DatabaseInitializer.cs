@@ -1,6 +1,11 @@
+using Klinova.Application.Abstractions;
+using Klinova.Application.Appointments;
 using Klinova.Application.Common;
+using Klinova.Application.Scheduling;
+using Klinova.Domain.Appointments;
 using Klinova.Domain.Organization;
 using Klinova.Domain.Patients;
+using Klinova.Domain.Scheduling;
 using Klinova.Domain.Settings;
 using Klinova.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -21,6 +26,8 @@ public sealed class DatabaseInitializer(
     UserManager<AppUser> userManager,
     RoleManager<IdentityRole> roleManager,
     IOptions<KlinovaOptions> options,
+    IClock clock,
+    IServiceProvider services,
     ILogger<DatabaseInitializer> logger)
 {
     private readonly KlinovaOptions _options = options.Value;
@@ -73,10 +80,30 @@ public sealed class DatabaseInitializer(
 
     private async Task EnsureReferenceDataAsync(CancellationToken ct)
     {
+        if (!await db.Facilities.AnyAsync(ct))
+        {
+            db.Facilities.Add(ReferenceData.DefaultFacility());
+            await db.SaveChangesAsync(ct);
+            logger.LogInformation("Default facility created. Review it under 'Kurumlar ve Şubeler'.");
+        }
+
         if (!await db.Polyclinics.AnyAsync(ct))
         {
-            db.Polyclinics.AddRange(ReferenceData.Polyclinics());
+            var facilityId = await db.Facilities.OrderBy(f => f.Id).Select(f => f.Id).FirstAsync(ct);
+            db.Polyclinics.AddRange(ReferenceData.Polyclinics(facilityId));
             logger.LogInformation("Default polyclinics created.");
+        }
+
+        var year = clock.Today.Year;
+        foreach (var y in new[] { year, year + 1 })
+        {
+            var start = new DateOnly(y, 1, 1);
+            var end = new DateOnly(y, 12, 31);
+            if (!await db.Holidays.AnyAsync(h => h.Date >= start && h.Date <= end, ct))
+            {
+                db.Holidays.AddRange(ReferenceData.NationalHolidays(y));
+                logger.LogInformation("National holidays for {Year} created. Add religious holidays under 'Resmî Tatiller'.", y);
+            }
         }
 
         if (!await db.MedicalServices.AnyAsync(ct))
@@ -133,11 +160,38 @@ public sealed class DatabaseInitializer(
         var ent = polyclinics.First(p => p.Name == "Kulak Burun Boğaz");
         var pediatrics = polyclinics.First(p => p.Name == "Çocuk Sağlığı ve Hastalıkları");
 
-        db.Doctors.AddRange(
-            new Doctor { Title = "Uzm. Dr.", FirstName = "Selin", LastName = "Aksoy", PolyclinicId = internal_.Id, UserId = doctorUser.Id },
-            new Doctor { Title = "Uzm. Dr.", FirstName = "Murat", LastName = "Kaya", PolyclinicId = internal_.Id },
-            new Doctor { Title = "Op. Dr.", FirstName = "Leyla", LastName = "Demir", PolyclinicId = ent.Id },
-            new Doctor { Title = "Uzm. Dr.", FirstName = "Kerem", LastName = "Şahin", PolyclinicId = pediatrics.Id });
+        // A second site shows the multi-facility structure (il / ilçe / kurum) of online booking.
+        var branch = new Facility { Name = "Semt Polikliniği", City = "Ankara", District = "Keçiören", Phone = "0312 000 00 00" };
+        db.Facilities.Add(branch);
+        await db.SaveChangesAsync(ct);
+        var branchInternal = new Polyclinic { FacilityId = branch.Id, Name = "Dahiliye", Location = "Zemin kat" };
+        var branchEye = new Polyclinic { FacilityId = branch.Id, Name = "Göz Hastalıkları", Location = "1. kat" };
+        db.Polyclinics.AddRange(branchInternal, branchEye);
+        await db.SaveChangesAsync(ct);
+
+        Doctor[] doctors =
+        [
+            new() { Title = "Uzm. Dr.", FirstName = "Selin", LastName = "Aksoy", PolyclinicId = internal_.Id, UserId = doctorUser.Id },
+            new() { Title = "Uzm. Dr.", FirstName = "Murat", LastName = "Kaya", PolyclinicId = internal_.Id },
+            new() { Title = "Op. Dr.", FirstName = "Leyla", LastName = "Demir", PolyclinicId = ent.Id },
+            new() { Title = "Uzm. Dr.", FirstName = "Kerem", LastName = "Şahin", PolyclinicId = pediatrics.Id },
+            new() { Title = "Uzm. Dr.", FirstName = "Emre", LastName = "Yalçın", PolyclinicId = branchInternal.Id },
+            new() { Title = "Op. Dr.", FirstName = "Deniz", LastName = "Kurt", PolyclinicId = branchEye.Id },
+        ];
+        db.Doctors.AddRange(doctors);
+        await db.SaveChangesAsync(ct);
+
+        // Weekday working hours: 09:00–12:00 and 13:30–16:30.
+        var today = clock.Today;
+        foreach (var doctor in doctors)
+        {
+            var slot = doctor.PolyclinicId == pediatrics.Id ? 20 : 15;
+            foreach (var day in new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday })
+            {
+                db.WorkSchedules.Add(new WorkSchedule(doctor.Id, day, new TimeOnly(9, 0), new TimeOnly(12, 0), slot, today.AddDays(-7), null, isOnlineBookable: true));
+                db.WorkSchedules.Add(new WorkSchedule(doctor.Id, day, new TimeOnly(13, 30), new TimeOnly(16, 30), slot, today.AddDays(-7), null, isOnlineBookable: day != DayOfWeek.Friday));
+            }
+        }
 
         // Demo patients intentionally have no national id: any valid-looking number could belong to a real person.
         Patient[] patients =
@@ -157,9 +211,35 @@ public sealed class DatabaseInitializer(
         db.Patients.AddRange(patients);
         await db.SaveChangesAsync(ct);
 
+        await SeedDemoAppointmentsAsync(patients, doctors, ct);
+
         if (string.IsNullOrWhiteSpace(_options.Seed.DemoPassword))
         {
             logger.LogWarning("Demo users 'kabul', 'hekim' and 'vezne' created. Shared demo password: {Password}", password);
+        }
+    }
+
+    /// <summary>Books a few appointments on the next working day so the calendars are not empty.</summary>
+    private async Task SeedDemoAppointmentsAsync(Patient[] patients, Doctor[] doctors, CancellationToken ct)
+    {
+        var availability = services.GetRequiredService<AvailabilityService>();
+        var appointments = services.GetRequiredService<AppointmentService>();
+        try
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                var doctor = doctors[i];
+                var slots = await availability.GetFreeSlotsAsync(doctor.PolyclinicId, doctor.Id, clock.Today.AddDays(1), clock.Today.AddDays(10), online: false, ct);
+                if (slots.Count > i * 2)
+                {
+                    var slot = slots[i * 2];
+                    await appointments.BookAsync(new BookingRequest { PatientId = patients[i].Id, DoctorId = doctor.Id, Date = slot.Date, StartTime = slot.Start, Note = i == 0 ? "Tahlil sonuçlarımı getireceğim." : null }, AppointmentChannel.Desk, ct);
+                }
+            }
+        }
+        catch (Domain.Common.DomainException ex)
+        {
+            logger.LogWarning(ex, "Demo appointments could not be created.");
         }
     }
 

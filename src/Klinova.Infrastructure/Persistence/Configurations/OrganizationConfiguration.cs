@@ -16,7 +16,13 @@ internal sealed class PolyclinicConfiguration : IEntityTypeConfiguration<Polycli
         b.Property(p => p.Description).HasMaxLength(FieldLengths.Address);
         b.Property(p => p.CreatedBy).HasMaxLength(FieldLengths.ShortText);
         b.Property(p => p.UpdatedBy).HasMaxLength(FieldLengths.ShortText);
-        b.HasIndex(p => p.Name).IsUnique();
+        b.HasOne(p => p.Facility)
+            .WithMany(f => f.Polyclinics)
+            .HasForeignKey(p => p.FacilityId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // The same department name may exist in several facilities.
+        b.HasIndex(p => new { p.FacilityId, p.Name }).IsUnique();
     }
 }
 

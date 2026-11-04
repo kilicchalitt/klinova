@@ -1,5 +1,9 @@
 using Klinova.Application.Abstractions;
+using Klinova.Application.Appointments;
+using Klinova.Application.Notifications;
+using Klinova.Infrastructure.BackgroundJobs;
 using Klinova.Infrastructure.Identity;
+using Klinova.Infrastructure.Notifications;
 using Klinova.Infrastructure.Persistence;
 using Klinova.Infrastructure.Services;
 using Microsoft.AspNetCore.DataProtection;
@@ -77,7 +81,43 @@ public static class DependencyInjection
 
         services.AddHealthChecks().AddDbContextCheck<AppDbContext>("database");
 
+        AddAppointmentsAndNotifications(services, configuration);
+
         return services;
+    }
+
+    private static void AddAppointmentsAndNotifications(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<AppointmentPolicy>().Bind(configuration.GetSection(AppointmentPolicy.SectionName));
+        services.AddOptions<NotificationOptions>().Bind(configuration.GetSection(NotificationOptions.SectionName));
+        services.AddOptions<BackgroundJobOptions>().Bind(configuration.GetSection(BackgroundJobOptions.SectionName));
+
+        var notifications = configuration.GetSection(NotificationOptions.SectionName).Get<NotificationOptions>() ?? new NotificationOptions();
+        if (notifications.Email.Enabled)
+        {
+            services.AddScoped<INotificationSender, SmtpEmailSender>();
+        }
+        else
+        {
+            services.AddScoped<INotificationSender, LoggingEmailSender>();
+        }
+
+        if (string.Equals(notifications.Sms.Provider, "Webhook", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddHttpClient<WebhookSmsSender>(c => c.Timeout = TimeSpan.FromSeconds(15));
+            services.AddScoped<INotificationSender>(sp => sp.GetRequiredService<WebhookSmsSender>());
+        }
+        else
+        {
+            services.AddScoped<INotificationSender, LoggingSmsSender>();
+        }
+
+        var jobs = configuration.GetSection(BackgroundJobOptions.SectionName).Get<BackgroundJobOptions>() ?? new BackgroundJobOptions();
+        if (jobs.Enabled)
+        {
+            services.AddHostedService<NotificationDispatchWorker>();
+            services.AddHostedService<AppointmentMaintenanceWorker>();
+        }
     }
 
     private static void EnsureSqliteDirectoryExists(string connectionString)
