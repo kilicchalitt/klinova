@@ -1,4 +1,5 @@
 using Klinova.Application.Abstractions;
+using Klinova.Application.Common;
 using Klinova.Domain.Visits;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,11 +34,11 @@ public sealed class DashboardService(IAppDbContext db, IClock clock)
             .Select(g => new { g.Key.PolyclinicId, g.Key.Status, Count = g.Count() })
             .ToListAsync(ct);
 
-        var polyclinics = await db.Polyclinics.AsNoTracking()
-            .Where(p => p.IsActive)
-            .OrderBy(p => p.Name)
-            .Select(p => new { p.Id, p.Name })
-            .ToListAsync(ct);
+        var polyclinics = (await db.Polyclinics.AsNoTracking()
+                .Where(p => p.IsActive)
+                .Select(p => new { p.Id, p.Name })
+                .ToListAsync(ct))
+            .SortBy(p => p.Name);
 
         var loads = polyclinics
             .Select(p => new PolyclinicLoad(

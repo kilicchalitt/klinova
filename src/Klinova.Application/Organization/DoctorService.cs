@@ -57,21 +57,28 @@ public sealed class DoctorService(IAppDbContext db)
     {
         var rows = await db.Doctors.AsNoTracking()
             .Where(d => polyclinicId == null || d.PolyclinicId == polyclinicId)
-            .OrderBy(d => d.Polyclinic!.Name).ThenBy(d => d.FirstName).ThenBy(d => d.LastName)
             .Select(d => new { d.Id, d.Title, d.FirstName, d.LastName, d.PolyclinicId, PolyclinicName = d.Polyclinic!.Name, d.Phone, d.UserId, d.IsActive })
             .ToListAsync(ct);
 
-        return rows.Select(d => new DoctorListItem(d.Id, FullName(d.Title, d.FirstName, d.LastName), d.PolyclinicId, d.PolyclinicName, d.Phone, d.UserId, d.IsActive)).ToList();
+        return rows
+            .OrderBy(d => d.PolyclinicName, TurkishCollation.Comparer)
+            .ThenBy(d => d.FirstName, TurkishCollation.Comparer)
+            .ThenBy(d => d.LastName, TurkishCollation.Comparer)
+            .Select(d => new DoctorListItem(d.Id, FullName(d.Title, d.FirstName, d.LastName), d.PolyclinicId, d.PolyclinicName, d.Phone, d.UserId, d.IsActive))
+            .ToList();
     }
 
     public async Task<List<LookupItem>> LookupAsync(int? polyclinicId = null, CancellationToken ct = default)
     {
         var rows = await db.Doctors.AsNoTracking()
             .Where(d => d.IsActive && (polyclinicId == null || d.PolyclinicId == polyclinicId))
-            .OrderBy(d => d.FirstName).ThenBy(d => d.LastName)
             .Select(d => new { d.Id, d.Title, d.FirstName, d.LastName })
             .ToListAsync(ct);
-        return rows.Select(d => new LookupItem(d.Id, FullName(d.Title, d.FirstName, d.LastName))).ToList();
+        return rows
+            .OrderBy(d => d.FirstName, TurkishCollation.Comparer)
+            .ThenBy(d => d.LastName, TurkishCollation.Comparer)
+            .Select(d => new LookupItem(d.Id, FullName(d.Title, d.FirstName, d.LastName)))
+            .ToList();
     }
 
     /// <summary>Returns the active physician record linked to a user account, if any.</summary>
