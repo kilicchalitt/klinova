@@ -6,6 +6,7 @@
 <partial name="_PageHeader" model='new PageHeaderModel("Yeni Hasta Kaydı", "Zorunlu alanlar * ile işaretlenmiştir. T.C. Kimlik No girilirse doğrulanır ve mükerrer kayıt engellenir.")' />
 
 <form method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
     <partial name="_PatientForm" model="Model.Input" />
     <div class="d-flex flex-wrap gap-3 align-items-center">
         <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Kaydet</button>
