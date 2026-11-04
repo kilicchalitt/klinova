@@ -18,6 +18,7 @@ services:
       Klinova__Seed__AdminUserName: ${KLINOVA_ADMIN_USER:-admin}
       Klinova__Seed__AdminPassword: ${KLINOVA_ADMIN_PASSWORD:-}
       Klinova__Seed__DemoData: ${KLINOVA_DEMO_DATA:-false}
+      Klinova__Seed__DemoPassword: ${KLINOVA_DEMO_PASSWORD:-}
       Klinova__TimeZone: ${KLINOVA_TIMEZONE:-Europe/Istanbul}
     volumes:
       - klinova-data:/app/data
