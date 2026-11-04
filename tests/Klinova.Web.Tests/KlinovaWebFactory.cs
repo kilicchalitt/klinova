@@ -33,12 +33,12 @@ public sealed partial class KlinovaWebFactory : WebApplicationFactory<Program>
     public static async Task<HttpResponseMessage> SignInAsync(HttpClient client, string userName, string password)
     {
         var token = await GetAntiforgeryTokenAsync(client, "/Account/Login");
-        return await client.PostAsync("/Account/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        return await client.PostFormAsync("/Account/Login", new Dictionary<string, string>
         {
             ["Input.UserName"] = userName,
             ["Input.Password"] = password,
             ["__RequestVerificationToken"] = token,
-        }));
+        });
     }
 
     public static async Task<string> GetAntiforgeryTokenAsync(HttpClient client, string path)

@@ -32,7 +32,7 @@ public sealed partial class PortalTests(KlinovaWebFactory factory) : IClassFixtu
     private static async Task<HttpResponseMessage> PostFormAsync(HttpClient client, string pagePath, string postPath, Dictionary<string, string> form)
     {
         form["__RequestVerificationToken"] = await KlinovaWebFactory.GetAntiforgeryTokenAsync(client, pagePath);
-        return await client.PostAsync(postPath, new FormUrlEncodedContent(form));
+        return await client.PostFormAsync(postPath, form);
     }
 
     [Fact]
@@ -66,12 +66,12 @@ public sealed partial class PortalTests(KlinovaWebFactory factory) : IClassFixtu
     {
         var client = factory.CreateBrowser();
         var token = await KlinovaWebFactory.GetAntiforgeryTokenAsync(client, "/Portal/Login");
-        var login = await client.PostAsync("/Portal/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        var login = await client.PostFormAsync("/Portal/Login", new Dictionary<string, string>
         {
             ["Input.NationalId"] = "10000000146",
             ["Input.Password"] = KlinovaWebFactory.DemoPassword,
             ["__RequestVerificationToken"] = token,
-        }));
+        });
         Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
         Assert.Equal("/Portal", login.Headers.Location!.OriginalString);
 
