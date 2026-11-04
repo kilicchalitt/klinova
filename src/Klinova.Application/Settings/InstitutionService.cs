@@ -44,7 +44,7 @@ public sealed class InstitutionInput
 public sealed class InstitutionService(IAppDbContext db)
 {
     public async Task<InstitutionProfile> GetAsync(CancellationToken ct = default)
-        => await db.InstitutionProfiles.AsNoTracking().FirstOrDefaultAsync(ct) ?? new InstitutionProfile();
+        => await db.InstitutionProfiles.AsNoTracking().OrderBy(p => p.Id).FirstOrDefaultAsync(ct) ?? new InstitutionProfile();
 
     public async Task<InstitutionInput> GetForEditAsync(CancellationToken ct = default)
     {
@@ -63,7 +63,7 @@ public sealed class InstitutionService(IAppDbContext db)
 
     public async Task UpdateAsync(InstitutionInput input, CancellationToken ct = default)
     {
-        var profile = await db.InstitutionProfiles.FirstOrDefaultAsync(ct);
+        var profile = await db.InstitutionProfiles.OrderBy(p => p.Id).FirstOrDefaultAsync(ct);
         if (profile is null)
         {
             profile = new InstitutionProfile();

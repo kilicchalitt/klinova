@@ -105,7 +105,7 @@ public sealed class NotificationService(IAppDbContext db, IClock clock, IOptions
     }
 
     private async Task<string> InstitutionNameAsync(CancellationToken ct)
-        => await db.InstitutionProfiles.AsNoTracking().Select(p => p.Name).FirstOrDefaultAsync(ct) ?? "Klinova";
+        => await db.InstitutionProfiles.AsNoTracking().OrderBy(p => p.Id).Select(p => p.Name).FirstOrDefaultAsync(ct) ?? "Klinova";
 
     private static string Describe(Appointment a) => $"{a.Date.ToString("d MMMM yyyy dddd", Turkish)} saat {a.StartTime:HH\\:mm}";
 }
