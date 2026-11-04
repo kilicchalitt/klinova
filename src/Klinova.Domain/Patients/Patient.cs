@@ -51,6 +51,12 @@ public class Patient : AuditableEntity
 
     public bool IsArchived { get; set; }
 
+    /// <summary>Identifier of the patient portal account, if the patient registered online.</summary>
+    public string? UserId { get; set; }
+
+    /// <summary>When the patient accepted the privacy notice (KVKK aydınlatma metni) in the portal.</summary>
+    public DateTime? PortalConsentAtUtc { get; set; }
+
     /// <summary>Normalised "first last" name used for accent-insensitive searching.</summary>
     public string SearchName { get; private set; } = string.Empty;
 
