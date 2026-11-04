@@ -1,0 +1,28 @@
+@model (string Title, string CountLabel, IReadOnlyList<Klinova.Application.Reports.RevenueBreakdown> Rows, decimal Total)
+<div class="card mb-3">
+    <div class="card-header">@Model.Title</div>
+    @if (Model.Rows.Count == 0)
+    {
+        <div class="card-body text-body-secondary small">Veri yok.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead><tr><th></th><th class="text-end">@Model.CountLabel</th><th class="text-end">Net Tutar</th><th class="w-25"></th></tr></thead>
+                <tbody>
+                    @foreach (var row in Model.Rows)
+                    {
+                        var percent = Model.Total == 0 ? 0 : row.Amount * 100 / Model.Total;
+                        <tr>
+                            <td>@row.Label</td>
+                            <td class="text-end">@row.Count</td>
+                            <td class="text-end font-monospace-num">@row.Amount.Money()</td>
+                            <td><div class="bar-track"><div class="bar-fill" data-percent="@percent.ToString("0.#", CultureInfo.InvariantCulture)"></div></div></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

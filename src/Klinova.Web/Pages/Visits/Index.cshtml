@@ -1,0 +1,76 @@
+@page
+@model Klinova.Web.Pages.Visits.IndexModel
+@{
+    ViewData["Title"] = "Başvurular";
+}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Başvurular</h1>
+        <p class="page-subtitle">@Model.Date.ShortDate() tarihli poliklinik başvuruları ve sıra durumu.</p>
+    </div>
+    @if (User.IsInAnyRole(Roles.Admin, Roles.Reception))
+    {
+        <a asp-page="/Patients/Index" class="btn btn-primary"><i class="bi bi-clipboard-plus me-1"></i>Hasta Kabul</a>
+    }
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-sm-6 col-md-3">
+                <label class="form-label small" for="date">Tarih</label>
+                <input type="date" id="date" name="date" value="@Model.Date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" class="form-control" data-autosubmit />
+            </div>
+            <div class="col-sm-6 col-md-4">
+                <label class="form-label small" for="polyclinicId">Poliklinik</label>
+                <select id="polyclinicId" name="polyclinicId" class="form-select" data-autosubmit>
+                    <option value="">Tümü</option>
+                    @foreach (var p in Model.Polyclinics)
+                    {
+                        <option value="@p.Id" selected="@(p.Id == Model.PolyclinicId)">@p.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <label class="form-label small" for="status">Durum</label>
+                <select id="status" name="status" class="form-select" asp-items="Html.GetEnumSelectList<VisitStatus>()" data-autosubmit>
+                    <option value="">Tümü</option>
+                </select>
+            </div>
+            <div class="col-auto"><button type="submit" class="btn btn-outline-primary"><i class="bi bi-funnel me-1"></i>Filtrele</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    @if (Model.Visits.Count == 0)
+    {
+        <div class="empty-state"><i class="bi bi-clipboard"></i>Seçilen kriterlere uygun başvuru yok.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Sıra</th><th>Hasta</th><th>Poliklinik</th><th>Hekim</th><th>Geliş</th><th>Durum</th><th class="text-end">Tutar</th></tr></thead>
+                <tbody>
+                    @foreach (var v in Model.Visits)
+                    {
+                        <tr data-href="@Url.Page("Details", new { id = v.Id })">
+                            <td><span class="queue-number">@v.QueueNumber</span></td>
+                            <td>
+                                <span class="fw-medium">@v.PatientName</span>
+                                @if (!string.IsNullOrWhiteSpace(v.MedicalAlerts)) { <i class="bi bi-exclamation-octagon-fill text-danger ms-1" title="@v.MedicalAlerts"></i> }
+                                <div class="small text-body-secondary font-monospace-num">@v.PatientFileNumber</div>
+                            </td>
+                            <td>@v.PolyclinicName</td>
+                            <td>@v.DoctorName.OrDash()</td>
+                            <td class="font-monospace-num">@Clock.ToLocal(v.CheckInAtUtc).ToString("HH:mm", CultureInfo.InvariantCulture)</td>
+                            <td><partial name="_StatusBadge" model="v.Status" /> @if (v.IsPaid) { <span class="badge rounded-pill text-bg-light border">Ödendi</span> }</td>
+                            <td class="text-end font-monospace-num">@v.TotalAmount.Money()</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

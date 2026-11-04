@@ -1,0 +1,41 @@
+@page
+@model Klinova.Web.Pages.Admin.Users.IndexModel
+@{
+    ViewData["Title"] = "Kullanıcılar";
+}
+<div class="page-header">
+    <div><h1 class="page-title">Kullanıcılar</h1><p class="page-subtitle">Hesaplar silinmez, pasifleştirilir; böylece geçmiş kayıtlardaki kullanıcı bilgisi korunur.</p></div>
+    <a asp-page="Edit" class="btn btn-primary"><i class="bi bi-person-plus me-1"></i>Yeni Kullanıcı</a>
+</div>
+
+@if (TempData[Klinova.Web.Pages.Admin.Users.IndexModel.TemporaryPasswordKey] is string temp)
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-key-fill me-2"></i>Geçici şifre: <code class="fs-6 user-select-all">@temp</code>
+        <div class="small mt-1">Bu şifre yalnızca bir kez gösterilir. Kullanıcıya güvenli bir kanalla iletin; ilk girişte yeni şifre belirlemesi istenecektir.</div>
+    </div>
+}
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Ad Soyad</th><th>Kullanıcı Adı</th><th>Roller</th><th>Son Giriş</th><th>Durum</th></tr></thead>
+            <tbody>
+                @foreach (var u in Model.Items)
+                {
+                    <tr data-href="@Url.Page("Edit", new { id = u.Id })">
+                        <td class="fw-medium">@u.FullName<div class="small text-body-secondary">@u.Email</div></td>
+                        <td class="font-monospace-num">@u.UserName</td>
+                        <td>@foreach (var r in u.Roles) { <span class="badge text-bg-light border me-1">@Roles.DisplayName(r)</span> }</td>
+                        <td class="small">@(u.LastSignInAtUtc is { } last ? Clock.ToLocal(last).ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture) : "—")</td>
+                        <td>
+                            @if (!u.IsActive) { <span class="badge text-bg-secondary">Pasif</span> }
+                            else if (u.IsLockedOut) { <span class="badge text-bg-danger">Kilitli</span> }
+                            else { <span class="badge text-bg-success">Aktif</span> }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

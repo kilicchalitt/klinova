@@ -1,0 +1,28 @@
+@page
+@model Klinova.Web.Pages.Admin.Polyclinics.IndexModel
+@{
+    ViewData["Title"] = "Poliklinikler";
+}
+<div class="page-header">
+    <div><h1 class="page-title">Poliklinikler</h1><p class="page-subtitle">Hasta kabul edilen birimler. Pasif poliklinikler kabul ekranında görünmez.</p></div>
+    <a asp-page="Edit" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Yeni Poliklinik</a>
+</div>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Ad</th><th>Konum</th><th>Açıklama</th><th class="text-center">Aktif Hekim</th><th>Durum</th></tr></thead>
+            <tbody>
+                @foreach (var p in Model.Items)
+                {
+                    <tr data-href="@Url.Page("Edit", new { id = p.Id })">
+                        <td class="fw-medium">@p.Name</td>
+                        <td>@p.Location.OrDash()</td>
+                        <td>@p.Description.OrDash()</td>
+                        <td class="text-center">@p.DoctorCount</td>
+                        <td>@if (p.IsActive) { <span class="badge text-bg-success">Aktif</span> } else { <span class="badge text-bg-secondary">Pasif</span> }</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

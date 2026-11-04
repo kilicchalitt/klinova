@@ -1,0 +1,67 @@
+@page "{visitId:int}"
+@model Klinova.Web.Pages.Billing.ReceiptModel
+@{
+    Layout = "_PrintLayout";
+    var v = Model.Visit;
+    var pay = v.Payment!;
+    var inst = Model.Institution;
+    ViewData["Title"] = $"Makbuz {pay.ReceiptNumber}";
+    ViewData["BackUrl"] = Url.Page("/Visits/Details", new { id = v.Id });
+}
+<div class="sheet">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1>@inst.Name</h1>
+            <div class="muted">@inst.Address</div>
+            <div class="muted">@inst.Phone @(string.IsNullOrEmpty(inst.Email) ? "" : $"· {inst.Email}")</div>
+            @if (!string.IsNullOrEmpty(inst.TaxNumber))
+            {
+                <div class="muted">Vergi Dairesi / No: @inst.TaxOffice / @inst.TaxNumber</div>
+            }
+        </div>
+        <div class="text-end">
+            <div class="fs-5 fw-bold">TAHSİLAT MAKBUZU</div>
+            <div>No: <strong>@pay.ReceiptNumber</strong></div>
+            <div>@Clock.ToLocal(pay.PaidAtUtc).ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture)</div>
+        </div>
+    </div>
+
+    <table class="table table-sm table-borderless mb-3">
+        <tr><td class="muted w-25">Hasta</td><td><strong>@v.Patient!.FullName</strong> (Dosya No @v.Patient.FileNumber)</td></tr>
+        <tr><td class="muted">Poliklinik</td><td>@v.Polyclinic!.Name · @v.VisitDate.ShortDate()</td></tr>
+        @if (v.Doctor is not null)
+        {
+            <tr><td class="muted">Hekim</td><td>@v.Doctor.FullName</td></tr>
+        }
+    </table>
+
+    <table class="table table-sm">
+        <thead><tr><th>Kod</th><th>Hizmet</th><th class="text-end">Adet</th><th class="text-end">Birim Fiyat</th><th class="text-end">Tutar</th></tr></thead>
+        <tbody>
+            @foreach (var item in v.Items.OrderBy(i => i.Id))
+            {
+                <tr><td>@item.ServiceCode</td><td>@item.ServiceName</td><td class="text-end">@item.Quantity</td><td class="text-end">@item.UnitPrice.Money()</td><td class="text-end">@item.LineTotal.Money()</td></tr>
+            }
+        </tbody>
+        <tfoot class="totals">
+            <tr><td colspan="4" class="text-end">Brüt Toplam</td><td class="text-end">@pay.GrossAmount.Money()</td></tr>
+            @if (pay.Discount > 0)
+            {
+                <tr><td colspan="4" class="text-end">İndirim</td><td class="text-end">-@pay.Discount.Money()</td></tr>
+            }
+            <tr><td colspan="4" class="text-end fs-6">Ödenen Tutar</td><td class="text-end fs-6">@pay.NetAmount.Money()</td></tr>
+        </tfoot>
+    </table>
+
+    <div class="d-flex justify-content-between mt-4">
+        <div class="muted">Ödeme şekli: @pay.Method.DisplayName()@(string.IsNullOrEmpty(pay.Note) ? "" : $" · {pay.Note}")</div>
+        <div class="text-center">
+            <div class="muted">Tahsil eden</div>
+            <div>@pay.ReceivedBy</div>
+        </div>
+    </div>
+    @if (!string.IsNullOrEmpty(inst.ReceiptFooter))
+    {
+        <p class="text-center muted mt-4 mb-0">@inst.ReceiptFooter</p>
+    }
+</div>

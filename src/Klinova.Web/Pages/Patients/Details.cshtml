@@ -1,0 +1,104 @@
+@page "{id:int}"
+@model Klinova.Web.Pages.Patients.DetailsModel
+@{
+    var p = Model.Patient;
+    ViewData["Title"] = p.FullName;
+    var canEdit = User.IsInAnyRole(Roles.Admin, Roles.Reception);
+    var age = p.AgeOn(Clock.Today);
+}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            @p.FullName
+            @if (p.IsArchived) { <span class="badge text-bg-secondary align-middle fs-6">Arşiv</span> }
+        </h1>
+        <p class="page-subtitle">Dosya No <span class="font-monospace-num">@p.FileNumber</span>@(age is null ? "" : $" · {age} yaş") · @p.Gender.DisplayName()</p>
+    </div>
+    @if (canEdit)
+    {
+        <div class="d-flex flex-wrap gap-2">
+            @if (!p.IsArchived)
+            {
+                <a asp-page="/Visits/Admit" asp-route-patientId="@p.Id" class="btn btn-primary"><i class="bi bi-clipboard-plus me-1"></i>Poliklinik Kabul</a>
+            }
+            <a asp-page="Edit" asp-route-id="@p.Id" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Düzenle</a>
+            <form method="post" asp-page-handler="Archive" asp-route-id="@p.Id">
+                <input type="hidden" name="archived" value="@((!p.IsArchived).ToString())" />
+                <button type="submit" class="btn btn-outline-secondary" data-confirm="@(p.IsArchived ? "Hasta arşivden çıkarılsın mı?" : "Hasta arşive alınsın mı? Arşivdeki hastalar aramalarda varsayılan olarak görünmez.")">
+                    <i class="bi @(p.IsArchived ? "bi-box-arrow-up" : "bi-archive") me-1"></i>@(p.IsArchived ? "Arşivden Çıkar" : "Arşivle")
+                </button>
+            </form>
+        </div>
+    }
+</div>
+
+@if (!string.IsNullOrWhiteSpace(p.MedicalAlerts))
+{
+    <div class="alert alert-medical"><i class="bi bi-exclamation-octagon-fill me-2"></i><strong>Tıbbi uyarı:</strong> @p.MedicalAlerts</div>
+}
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-header">Kimlik</div>
+            <div class="card-body">
+                <dl class="dl-compact mb-0">
+                    <dt>T.C. Kimlik No</dt><dd class="font-monospace-num">@p.NationalId.OrDash()</dd>
+                    @if (!string.IsNullOrEmpty(p.PassportNumber)) { <dt>Pasaport No</dt><dd>@p.PassportNumber</dd> }
+                    <dt>Doğum</dt><dd>@p.BirthDate.ShortDate() @(string.IsNullOrEmpty(p.BirthPlace) ? "" : $"· {p.BirthPlace}")</dd>
+                    <dt>Anne / Baba Adı</dt><dd>@p.MotherName.OrDash() / @p.FatherName.OrDash()</dd>
+                    <dt>Medeni Hâl</dt><dd>@p.MaritalStatus.DisplayName()</dd>
+                    <dt>Kan Grubu</dt><dd>@p.BloodType.DisplayName()</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-header">İletişim ve Güvence</div>
+            <div class="card-body">
+                <dl class="dl-compact mb-0">
+                    <dt>Telefon</dt><dd>@p.Phone.OrDash()</dd>
+                    <dt>E-posta</dt><dd>@p.Email.OrDash()</dd>
+                    <dt>Adres</dt><dd>@p.Address.OrDash()</dd>
+                    <dt>Yakını</dt><dd>@p.EmergencyContactName.OrDash() @(string.IsNullOrEmpty(p.EmergencyContactPhone) ? "" : $"· {p.EmergencyContactPhone}")</dd>
+                    <dt>Güvence</dt><dd>@p.InsuranceType.DisplayName() @(string.IsNullOrEmpty(p.InsuranceInstitution) ? "" : $"· {p.InsuranceInstitution}")</dd>
+                    @if (!string.IsNullOrEmpty(p.InsuranceNumber)) { <dt>Sicil / Poliçe No</dt><dd>@p.InsuranceNumber</dd> }
+                </dl>
+            </div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(p.Notes))
+        {
+            <div class="card mb-3"><div class="card-header">Notlar</div><div class="card-body">@p.Notes</div></div>
+        }
+        <p class="small text-body-secondary">Kayıt: @Clock.ToLocal(p.CreatedAtUtc).ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture) · @p.CreatedBy</p>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-clock-history me-2"></i>Başvuru Geçmişi</div>
+            @if (Model.Visits.Count == 0)
+            {
+                <div class="empty-state"><i class="bi bi-clipboard"></i>Hastanın henüz başvurusu yok.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead><tr><th>Tarih</th><th>Poliklinik / Hekim</th><th>Tanı</th><th>Durum</th><th class="text-end">Tutar</th></tr></thead>
+                        <tbody>
+                            @foreach (var v in Model.Visits)
+                            {
+                                <tr data-href="@Url.Page("/Visits/Details", new { id = v.VisitId })">
+                                    <td class="text-nowrap">@v.VisitDate.ShortDate()<div class="small text-body-secondary">Sıra @v.QueueNumber</div></td>
+                                    <td>@v.PolyclinicName<div class="small text-body-secondary">@v.DoctorName.OrDash()</div></td>
+                                    <td>@v.Diagnosis.OrDash()</td>
+                                    <td><partial name="_StatusBadge" model="v.Status" /> @if (v.IsPaid) { <span class="badge rounded-pill text-bg-light border">Ödendi</span> }</td>
+                                    <td class="text-end font-monospace-num">@v.TotalAmount.Money()</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

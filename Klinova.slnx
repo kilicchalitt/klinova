@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Klinova.Application/Klinova.Application.csproj" />
+    <Project Path="src/Klinova.Domain/Klinova.Domain.csproj" />
+    <Project Path="src/Klinova.Infrastructure/Klinova.Infrastructure.csproj" />
+    <Project Path="src/Klinova.Web/Klinova.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Klinova.Application.Tests/Klinova.Application.Tests.csproj" />
+    <Project Path="tests/Klinova.Domain.Tests/Klinova.Domain.Tests.csproj" />
+    <Project Path="tests/Klinova.Web.Tests/Klinova.Web.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,77 @@
+@page
+@model Klinova.Web.Pages.Billing.IndexModel
+@{
+    ViewData["Title"] = "Vezne";
+}
+<partial name="_PageHeader" model='new PageHeaderModel("Vezne", "Tamamlanan muayenelerin tahsilatı ve günlük kasa hareketleri.")' />
+
+<div class="card mb-4">
+    <div class="card-header"><i class="bi bi-hourglass me-2"></i>Tahsilat Bekleyenler (@Model.Outstanding.Count)</div>
+    @if (Model.Outstanding.Count == 0)
+    {
+        <div class="empty-state"><i class="bi bi-check2-all"></i>Tahsilat bekleyen başvuru yok.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Tarih</th><th>Hasta</th><th>Poliklinik</th><th>Hekim</th><th class="text-end">Tutar</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var v in Model.Outstanding)
+                    {
+                        <tr>
+                            <td class="text-nowrap">@v.VisitDate.ShortDate()<div class="small text-body-secondary">Sıra @v.QueueNumber</div></td>
+                            <td class="fw-medium">@v.PatientName<div class="small text-body-secondary font-monospace-num">@v.PatientFileNumber</div></td>
+                            <td>@v.PolyclinicName</td>
+                            <td>@v.DoctorName.OrDash()</td>
+                            <td class="text-end font-monospace-num fw-semibold">@v.TotalAmount.Money()</td>
+                            <td class="text-end"><a asp-page="Pay" asp-route-visitId="@v.Id" class="btn btn-sm btn-primary"><i class="bi bi-cash-coin me-1"></i>Tahsil Et</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<div class="card">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span><i class="bi bi-receipt me-2"></i>Tahsilatlar</span>
+        <form method="get" class="d-flex gap-2">
+            <input type="date" name="date" value="@Model.Date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" class="form-control form-control-sm" data-autosubmit aria-label="Tarih" />
+        </form>
+    </div>
+    @if (Model.Payments.Count == 0)
+    {
+        <div class="empty-state"><i class="bi bi-wallet2"></i>@Model.Date.ShortDate() tarihinde tahsilat yapılmadı.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Makbuz No</th><th>Saat</th><th>Hasta</th><th>Poliklinik</th><th>Ödeme Şekli</th><th>Kasiyer</th><th class="text-end">Tutar</th></tr></thead>
+                <tbody>
+                    @foreach (var p in Model.Payments)
+                    {
+                        <tr data-href="@Url.Page("Receipt", new { visitId = p.VisitId })">
+                            <td class="font-monospace-num">@p.ReceiptNumber</td>
+                            <td class="font-monospace-num">@Clock.ToLocal(p.PaidAtUtc).ToString("HH:mm", CultureInfo.InvariantCulture)</td>
+                            <td>@p.PatientName</td>
+                            <td>@p.PolyclinicName</td>
+                            <td>@p.Method.DisplayName()</td>
+                            <td>@p.ReceivedBy.OrDash()</td>
+                            <td class="text-end font-monospace-num">@p.NetAmount.Money()</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    @foreach (var group in Model.Payments.GroupBy(p => p.Method))
+                    {
+                        <tr class="small"><td colspan="6" class="text-end text-body-secondary">@group.Key.DisplayName()</td><td class="text-end font-monospace-num">@group.Sum(p => p.NetAmount).Money()</td></tr>
+                    }
+                    <tr><th colspan="6" class="text-end">Gün Toplamı</th><th class="text-end font-monospace-num">@Model.Payments.Sum(p => p.NetAmount).Money()</th></tr>
+                </tfoot>
+            </table>
+        </div>
+    }
+</div>

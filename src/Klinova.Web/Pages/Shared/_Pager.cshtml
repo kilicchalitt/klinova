@@ -1,0 +1,15 @@
+@model PagerModel
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Sayfalama" class="d-flex justify-content-between align-items-center mt-3">
+        <small class="text-body-secondary">Toplam @Model.TotalCount kayıt · Sayfa @Model.Page / @Model.TotalPages</small>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                <a class="page-link" href="@Model.UrlFor(Model.Page - 1)">Önceki</a>
+            </li>
+            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" href="@Model.UrlFor(Model.Page + 1)">Sonraki</a>
+            </li>
+        </ul>
+    </nav>
+}

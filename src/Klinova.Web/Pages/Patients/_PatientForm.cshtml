@@ -1,0 +1,124 @@
+@model Klinova.Application.Patients.PatientInput
+@{
+    ViewData.TemplateInfo.HtmlFieldPrefix = "Input";
+}
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-person-vcard me-2"></i>Kimlik Bilgileri</div>
+    <div class="card-body row g-3">
+        <div class="col-md-4">
+            <label asp-for="NationalId" class="form-label"></label>
+            <input asp-for="NationalId" class="form-control font-monospace-num" inputmode="numeric" maxlength="11" autocomplete="off" />
+            <span asp-validation-for="NationalId" class="text-danger small"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="FirstName" class="form-label required-mark"></label>
+            <input asp-for="FirstName" class="form-control" autocomplete="off" />
+            <span asp-validation-for="FirstName" class="text-danger small"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="LastName" class="form-label required-mark"></label>
+            <input asp-for="LastName" class="form-control" autocomplete="off" />
+            <span asp-validation-for="LastName" class="text-danger small"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="BirthDate" class="form-label"></label>
+            <input asp-for="BirthDate" type="date" class="form-control" />
+            <span asp-validation-for="BirthDate" class="text-danger small"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="BirthPlace" class="form-label"></label>
+            <input asp-for="BirthPlace" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Gender" class="form-label"></label>
+            <select asp-for="Gender" asp-items="Html.GetEnumSelectList<Gender>()" class="form-select"></select>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="MaritalStatus" class="form-label"></label>
+            <select asp-for="MaritalStatus" asp-items="Html.GetEnumSelectList<MaritalStatus>()" class="form-select"></select>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="MotherName" class="form-label"></label>
+            <input asp-for="MotherName" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="FatherName" class="form-label"></label>
+            <input asp-for="FatherName" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="PassportNumber" class="form-label"></label>
+            <input asp-for="PassportNumber" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="BloodType" class="form-label"></label>
+            <select asp-for="BloodType" asp-items="Html.GetEnumSelectList<BloodType>()" class="form-select"></select>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-telephone me-2"></i>İletişim</div>
+            <div class="card-body row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Phone" class="form-label"></label>
+                    <input asp-for="Phone" class="form-control" inputmode="tel" />
+                    <span asp-validation-for="Phone" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Address" class="form-label"></label>
+                    <textarea asp-for="Address" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="EmergencyContactName" class="form-label"></label>
+                    <input asp-for="EmergencyContactName" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="EmergencyContactPhone" class="form-label"></label>
+                    <input asp-for="EmergencyContactPhone" class="form-control" inputmode="tel" />
+                    <span asp-validation-for="EmergencyContactPhone" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-shield-check me-2"></i>Sağlık Güvencesi</div>
+            <div class="card-body row g-3">
+                <div class="col-md-6">
+                    <label asp-for="InsuranceType" class="form-label"></label>
+                    <select asp-for="InsuranceType" asp-items="Html.GetEnumSelectList<InsuranceType>()" class="form-select"></select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="InsuranceInstitution" class="form-label"></label>
+                    <input asp-for="InsuranceInstitution" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="InsuranceNumber" class="form-label"></label>
+                    <input asp-for="InsuranceNumber" class="form-control" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-exclamation-diamond me-2"></i>Tıbbi Uyarılar ve Notlar</div>
+    <div class="card-body row g-3">
+        <div class="col-md-6">
+            <label asp-for="MedicalAlerts" class="form-label"></label>
+            <textarea asp-for="MedicalAlerts" class="form-control" rows="3" placeholder="Örn. Penisilin alerjisi, astım"></textarea>
+            <div class="form-text">Hekim ekranlarında belirgin şekilde gösterilir.</div>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Notes" class="form-label"></label>
+            <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+        </div>
+    </div>
+</div>
