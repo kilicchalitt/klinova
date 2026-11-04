@@ -5,15 +5,30 @@ using Klinova.Domain.Notifications;
 using Klinova.Domain.Patients;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Klinova.Application.Notifications;
+
+/// <summary>Which external delivery channels are configured; set by the infrastructure layer.</summary>
+public sealed class NotificationDeliveryOptions
+{
+    /// <summary>An SMS provider is configured; otherwise no SMS messages are queued.</summary>
+    public bool SmsEnabled { get; set; }
+
+    /// <summary>An SMTP server is configured; otherwise no e-mails are queued.</summary>
+    public bool EmailEnabled { get; set; }
+}
 
 /// <summary>
 /// Queues patient notifications (outbox). Messages are added to the current unit of
 /// work and therefore saved in the same transaction as the change that caused them.
+/// Patients with a portal account always receive the message under "Bildirimlerim";
+/// SMS and e-mail are added only when a provider is configured.
 /// </summary>
-public sealed class NotificationService(IAppDbContext db, IClock clock)
+public sealed class NotificationService(IAppDbContext db, IClock clock, IOptions<NotificationDeliveryOptions> delivery)
 {
+    private readonly NotificationDeliveryOptions _delivery = delivery.Value;
+
     private static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
 
     public async Task AppointmentBookedAsync(Patient patient, Appointment appointment, string doctorName, string polyclinicName, string facilityName, CancellationToken ct)
@@ -62,12 +77,28 @@ public sealed class NotificationService(IAppDbContext db, IClock clock)
     private void Enqueue(Patient patient, NotificationType type, string subject, string body)
     {
         var now = clock.UtcNow;
-        if (!string.IsNullOrWhiteSpace(patient.Phone))
+        if (patient.UserId is not null)
+        {
+            db.Notifications.Add(new Notification
+            {
+                PatientId = patient.Id,
+                Type = type,
+                Channel = NotificationChannel.Portal,
+                Recipient = "Hasta portalı",
+                Subject = subject,
+                Body = body,
+                CreatedAtUtc = now,
+                Status = NotificationStatus.Sent,
+                SentAtUtc = now,
+            });
+        }
+
+        if (_delivery.SmsEnabled && !string.IsNullOrWhiteSpace(patient.Phone))
         {
             db.Notifications.Add(new Notification { PatientId = patient.Id, Type = type, Channel = NotificationChannel.Sms, Recipient = patient.Phone, Subject = subject, Body = body, CreatedAtUtc = now });
         }
 
-        if (!string.IsNullOrWhiteSpace(patient.Email))
+        if (_delivery.EmailEnabled && !string.IsNullOrWhiteSpace(patient.Email))
         {
             db.Notifications.Add(new Notification { PatientId = patient.Id, Type = type, Channel = NotificationChannel.Email, Recipient = patient.Email, Subject = subject, Body = body, CreatedAtUtc = now });
         }
@@ -77,6 +108,34 @@ public sealed class NotificationService(IAppDbContext db, IClock clock)
         => await db.InstitutionProfiles.AsNoTracking().Select(p => p.Name).FirstOrDefaultAsync(ct) ?? "Klinova";
 
     private static string Describe(Appointment a) => $"{a.Date.ToString("d MMMM yyyy dddd", Turkish)} saat {a.StartTime:HH\\:mm}";
+}
+
+/// <summary>Portal inbox of a patient ("Bildirimlerim").</summary>
+public sealed class PatientInbox(IAppDbContext db, IClock clock)
+{
+    public Task<int> UnreadCountAsync(int patientId, CancellationToken ct = default)
+        => db.Notifications.CountAsync(n => n.PatientId == patientId && n.Channel == NotificationChannel.Portal && n.ReadAtUtc == null, ct);
+
+    public Task<List<Notification>> ListAsync(int patientId, int take = 50, CancellationToken ct = default)
+        => db.Notifications.AsNoTracking()
+            .Where(n => n.PatientId == patientId && n.Channel == NotificationChannel.Portal)
+            .OrderByDescending(n => n.Id)
+            .Take(take)
+            .ToListAsync(ct);
+
+    public async Task MarkAllReadAsync(int patientId, CancellationToken ct = default)
+    {
+        var unread = await db.Notifications
+            .Where(n => n.PatientId == patientId && n.Channel == NotificationChannel.Portal && n.ReadAtUtc == null)
+            .ToListAsync(ct);
+        if (unread.Count == 0)
+        {
+            return;
+        }
+
+        unread.ForEach(n => n.MarkRead(clock.UtcNow));
+        await db.SaveChangesAsync(ct);
+    }
 }
 
 /// <summary>Sends pending notifications through the registered channel senders.</summary>

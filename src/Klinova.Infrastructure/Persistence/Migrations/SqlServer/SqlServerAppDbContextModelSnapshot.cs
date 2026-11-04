@@ -295,6 +295,9 @@ namespace Klinova.Infrastructure.Persistence.Migrations.SqlServer
                     b.Property<int?>("PatientId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("ReadAtUtc")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Recipient")
                         .IsRequired()
                         .HasMaxLength(120)

@@ -279,6 +279,9 @@ namespace Klinova.Infrastructure.Persistence.Migrations.Sqlite
                     b.Property<int?>("PatientId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("ReadAtUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Recipient")
                         .IsRequired()
                         .HasMaxLength(120)
