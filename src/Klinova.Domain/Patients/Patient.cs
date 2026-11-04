@@ -51,10 +51,16 @@ public class Patient : AuditableEntity
 
     public bool IsArchived { get; set; }
 
+    /// <summary>Normalised "first last" name used for accent-insensitive searching.</summary>
+    public string SearchName { get; private set; } = string.Empty;
+
     /// <summary>Human friendly, zero padded file number ("Dosya No").</summary>
     public string FileNumber => FormatFileNumber(Id);
 
     public string FullName => $"{FirstName} {LastName}";
+
+    /// <summary>Must be called after the name changes so that searching keeps working.</summary>
+    public void RefreshSearchName() => SearchName = SearchNormalizer.Normalize(FullName);
 
     public static string FormatFileNumber(int id) => id.ToString("D8", System.Globalization.CultureInfo.InvariantCulture);
 
