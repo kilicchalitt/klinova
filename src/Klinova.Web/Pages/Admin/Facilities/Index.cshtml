@@ -1,0 +1,29 @@
+@page
+@model Klinova.Web.Pages.Admin.Facilities.IndexModel
+@{
+    ViewData["Title"] = "Kurumlar ve Şubeler";
+}
+<div class="page-header">
+    <div><h1 class="page-title">Kurumlar ve Şubeler</h1><p class="page-subtitle">Hastane, kampüs binası, semt polikliniği gibi hizmet noktaları. Online randevuda hastalar önce il, sonra kurum seçer.</p></div>
+    <a asp-page="Edit" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Yeni Kurum</a>
+</div>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Ad</th><th>İl / İlçe</th><th>Adres</th><th>Telefon</th><th class="text-center">Poliklinik</th><th>Durum</th></tr></thead>
+            <tbody>
+                @foreach (var f in Model.Items)
+                {
+                    <tr data-href="@Url.Page("Edit", new { id = f.Id })">
+                        <td class="fw-medium">@f.Name</td>
+                        <td>@f.City / @f.District</td>
+                        <td class="small">@f.Address.OrDash()</td>
+                        <td>@f.Phone.OrDash()</td>
+                        <td class="text-center">@f.PolyclinicCount</td>
+                        <td>@if (f.IsActive) { <span class="badge text-bg-success">Aktif</span> } else { <span class="badge text-bg-secondary">Pasif</span> }</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

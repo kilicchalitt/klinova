@@ -41,16 +41,27 @@ Status legend: ✅ done · 🚧 in progress · 🗓️ planned
 - ✅ Health check endpoint, security headers, HTTPS/HSTS, anti-forgery protection.
 - ✅ Contributor documentation, security policy, issue and pull-request templates.
 
-## Phase 4 — Next releases 🗓️
+## Phase 4 — Appointments and patient portal (v2.0) ✅
 
-- 🗓️ Appointment scheduling with physician calendars.
+- ✅ Facilities with province and district (multi-site institutions).
+- ✅ Physician work schedules, leave and holidays.
+- ✅ Online appointments with MHRS-style rules (no-show restriction, cancellation deadline,
+  one active appointment per polyclinic), rescheduling and waiting list.
+- ✅ Patient portal with self-service registration and protected linking of existing files.
+- ✅ SMS / e-mail notification outbox, reminders and background jobs.
+- ✅ Staff appointment calendar, desk booking and check-in.
+
+## Phase 5 — Next releases 🗓️
+
+- 🗓️ e-Devlet sign-in and SMS one-time codes for the patient portal.
 - 🗓️ ICD-10 diagnosis catalogue with search.
+- 🗓️ Laboratory results in the patient portal ("e-sonuç").
 - 🗓️ Prescription and laboratory request forms.
+- 🗓️ Waiting-room queue display screen.
+- 🗓️ PDF export for receipts and reports; iCalendar files for appointments.
 - 🗓️ PostgreSQL provider.
 - 🗓️ Multi-language UI (Turkish / English resource files).
-- 🗓️ Queue display screen for waiting rooms.
-- 🗓️ PDF export for receipts and reports.
 - 🗓️ Data export / anonymisation tooling to support KVKK and GDPR requests.
-- 🗓️ Optional integration points (e-Nabız, MEDULA) behind clearly separated adapters.
+- 🗓️ Optional integration points (e-Nabız, MEDULA, MHRS) behind clearly separated adapters.
 
 Have an idea? Open a [feature request](../.github/ISSUE_TEMPLATE/feature_request.yml).

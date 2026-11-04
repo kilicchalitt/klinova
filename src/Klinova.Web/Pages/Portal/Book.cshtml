@@ -1,0 +1,133 @@
+@page
+@model Klinova.Web.Pages.Portal.BookModel
+@{
+    ViewData["Title"] = "Randevu Al";
+    var tr = CultureInfo.GetCultureInfo("tr-TR");
+    var signedIn = User.IsInRole(Roles.Patient);
+}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">@(Model.RescheduleId is null ? "Randevu Al" : "Randevu Değiştir")</h1>
+        <p class="page-subtitle">Önümüzdeki @(Model.LastBookableDay == default ? "" : $"{(Model.LastBookableDay.DayNumber - Clock.Today.DayNumber)} gün için ")boş randevuları görüntüleyin.</p>
+    </div>
+</div>
+
+@if (!signedIn)
+{
+    <div class="alert alert-info d-flex flex-wrap align-items-center gap-2">
+        <i class="bi bi-info-circle"></i>
+        <span>Boş saatleri herkes görebilir; randevu almak için giriş yapmanız gerekir.</span>
+        <a asp-page="Login" asp-route-returnUrl="@($"{Request.Path}{Request.QueryString}")" class="btn btn-sm btn-primary ms-auto">Giriş Yap</a>
+        <a asp-page="Register" class="btn btn-sm btn-outline-primary">Hesap Oluştur</a>
+    </div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <input type="hidden" name="rescheduleId" value="@Model.RescheduleId" />
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label" for="city"><span class="step-badge">1</span>İl</label>
+                <select id="city" name="city" class="form-select" data-autosubmit>
+                    <option value="">Seçiniz…</option>
+                    @foreach (var c in Model.Cities) { <option value="@c" selected="@(c == Model.City)">@c</option> }
+                </select>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label" for="facilityId"><span class="step-badge">2</span>Kurum</label>
+                <select id="facilityId" name="facilityId" class="form-select" data-autosubmit disabled="@(Model.City is null)">
+                    <option value="">Seçiniz…</option>
+                    @foreach (var f in Model.Facilities) { <option value="@f.Id" selected="@(f.Id == Model.FacilityId)">@f.Name</option> }
+                </select>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label" for="polyclinicId"><span class="step-badge">3</span>Poliklinik</label>
+                <select id="polyclinicId" name="polyclinicId" class="form-select" data-autosubmit disabled="@(Model.FacilityId is null)">
+                    <option value="">Seçiniz…</option>
+                    @foreach (var p in Model.Polyclinics) { <option value="@p.Id" selected="@(p.Id == Model.PolyclinicId)">@p.Name</option> }
+                </select>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label" for="doctorId"><span class="step-badge">4</span>Hekim</label>
+                <select id="doctorId" name="doctorId" class="form-select" data-autosubmit disabled="@(Model.PolyclinicId is null)">
+                    <option value="">Fark etmez</option>
+                    @foreach (var d in Model.Doctors) { <option value="@d.Id" selected="@(d.Id == Model.DoctorId)">@d.Name</option> }
+                </select>
+            </div>
+            <noscript><div class="col-12"><button class="btn btn-primary">Devam</button></div></noscript>
+        </form>
+    </div>
+</div>
+
+@if (Model.Restriction is { } restriction)
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-slash-circle me-1"></i>
+        Gitmediğiniz randevu nedeniyle <strong>@restriction.Until.ToString("d MMMM yyyy", tr)</strong> tarihine kadar
+        @(restriction.AllPolyclinics ? "hiçbir poliklinikten" : "bu poliklinikten") online randevu alamazsınız.
+        Randevu için kurumu telefonla arayabilirsiniz.
+    </div>
+}
+
+@if (Model.Picker is { } picker)
+{
+    @if (Model.Earliest is { } earliest)
+    {
+        <div class="alert alert-success d-flex flex-wrap align-items-center gap-2">
+            <i class="bi bi-lightning-charge-fill"></i>
+            <span>İlk uygun randevu: <strong>@earliest.Date.ToString("d MMMM yyyy dddd", tr), @earliest.Start.ToString("HH:mm", CultureInfo.InvariantCulture)</strong> · @earliest.DoctorName</span>
+            @if (earliest.Date > picker.To || earliest.Date < picker.From)
+            {
+                <a class="btn btn-sm btn-success ms-auto" href="@Model.WindowUrl(earliest.Date)">O haftaya git</a>
+            }
+        </div>
+    }
+
+    <form method="post" asp-page-handler="Book" asp-all-route-data='new Dictionary<string, string?> { ["city"] = Model.City, ["facilityId"] = Model.FacilityId?.ToString(CultureInfo.InvariantCulture), ["polyclinicId"] = Model.PolyclinicId?.ToString(CultureInfo.InvariantCulture), ["doctorId"] = Model.DoctorId?.ToString(CultureInfo.InvariantCulture), ["rescheduleId"] = Model.RescheduleId?.ToString(CultureInfo.InvariantCulture), ["from"] = picker.From.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) }'>
+        <h2 class="h6 mb-2"><span class="step-badge">5</span>Gün ve saat seçin</h2>
+        <partial name="_SlotPicker" model="picker" />
+
+        @if (picker.Slots.Count > 0)
+        {
+            <div class="card mt-3">
+                <div class="card-body row g-3 align-items-end">
+                    <div class="col-md-8">
+                        <label class="form-label" for="note">Hekime not (isteğe bağlı)</label>
+                        <input id="note" name="note" class="form-control" maxlength="@Klinova.Domain.Appointments.Appointment.NoteMaxLength" placeholder="Örn. Kontrol randevusu, tahlil sonuçlarımı getireceğim" disabled="@(!signedIn)" />
+                    </div>
+                    <div class="col-md-4 d-grid">
+                        @if (signedIn)
+                        {
+                            <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check2-circle me-1"></i>@(Model.RescheduleId is null ? "Randevuyu Onayla" : "Randevuyu Değiştir")</button>
+                        }
+                        else
+                        {
+                            <a asp-page="Login" asp-route-returnUrl="@($"{Request.Path}{Request.QueryString}")" class="btn btn-primary btn-lg">Randevu için giriş yapın</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </form>
+
+    @if (signedIn && Model.Earliest is null)
+    {
+        <div class="card mt-3 border-warning">
+            <div class="card-body">
+                <h2 class="h6"><i class="bi bi-hourglass-split me-1"></i>Uygun randevu bulunamadı</h2>
+                <p class="small text-body-secondary">Bekleme listesine yazılın; seçtiğiniz poliklinikte@(Model.DoctorId is null ? "" : " ve hekimde") bir randevu iptal edildiğinde size SMS ile haber verelim.</p>
+                <form method="post" asp-page-handler="Waitlist" asp-route-polyclinicId="@Model.PolyclinicId" asp-route-doctorId="@Model.DoctorId" asp-route-city="@Model.City" asp-route-facilityId="@Model.FacilityId" class="row g-2 align-items-end">
+                    <div class="col-sm-5 col-md-4">
+                        <label class="form-label small" for="until">Şu tarihe kadar bekleyebilirim</label>
+                        <input type="date" id="until" name="until" class="form-control" value="@Clock.Today.AddDays(14).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" min="@Clock.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" max="@Model.LastBookableDay.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" />
+                    </div>
+                    <div class="col-auto"><button class="btn btn-warning"><i class="bi bi-bell me-1"></i>Bekleme Listesine Yaz</button></div>
+                </form>
+            </div>
+        </div>
+    }
+}
+else if (Model.Cities.Count == 0)
+{
+    <div class="card"><div class="empty-state"><i class="bi bi-calendar-x"></i>Şu anda online randevu verilmemektedir.</div></div>
+}

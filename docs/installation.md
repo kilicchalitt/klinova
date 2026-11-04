@@ -148,10 +148,17 @@ aksi halde istemci IP'si ve HTTPS bilgisi uygulamaya doğru aktarılmaz.
    (`Temporary password` satırı).
 3. Sistem sizden yeni bir şifre belirlemenizi ister.
 4. **Kurum Ayarları**'ndan kurum adını, adresini ve makbuz notunu girin.
-5. **Poliklinikler**, **Hekimler** ve **Fiyat Listesi**'ni kurumunuza göre düzenleyin
-   (varsayılan fiyatlar örnek amaçlıdır).
-6. **Kullanıcılar**'dan personel hesaplarını oluşturun ve hekim hesaplarını
-   **Hekimler** ekranında ilgili hekim kaydına bağlayın.
+5. **Kurumlar ve Şubeler**'de varsayılan şubenin adını, ilini ve ilçesini düzenleyin; varsa diğer
+   şubeleri ekleyin.
+6. **Poliklinikler**, **Hekimler** ve **Fiyat Listesi**'ni kurumunuza göre düzenleyin
+   (varsayılan fiyatlar örnek amaçlıdır). Online randevu verilmeyecek poliklinikleri kapatın.
+7. **Çalışma Takvimleri**'nden her hekimin haftalık çalışma saatlerini ve randevu süresini girin;
+   online randevu ancak bu takvimden üretilen saatler için verilir.
+8. **Resmî Tatiller**'e o yılın Ramazan ve Kurban Bayramı tarihlerini ekleyin.
+9. SMS ve e-posta sağlayıcınızı [yapılandırın](configuration.md#bildirimler).
+10. **Kullanıcılar**'dan personel hesaplarını oluşturun ve hekim hesaplarını
+    **Hekimler** ekranında ilgili hekim kaydına bağlayın.
+11. Hasta portalının adresini (sitenin ana adresi) hastalarınızla paylaşın.
 
 ## Yedekleme ve Geri Yükleme
 
@@ -190,6 +197,9 @@ Sürüm notları için [CHANGELOG.md](../CHANGELOG.md)'ye bakın.
 - [ ] Uygulama yalnızca HTTPS üzerinden erişilebilir; HTTP portu dışarıya kapalı.
 - [ ] İlk yönetici şifresi değiştirildi; `Klinova__Seed__AdminPassword` ortam değişkeni kaldırıldı.
 - [ ] Demo verisi kapalı (`Klinova:Seed:DemoData=false`).
+- [ ] SMS / SMTP kimlik bilgileri dosyada değil, ortam değişkeninde veya gizli yönetim aracında.
+- [ ] Hasta portalının aydınlatma metni hukuk birimi tarafından kuruma göre düzenlendi.
+- [ ] Birden fazla uygulama sunucusu varsa arka plan işleri yalnızca birinde açık.
 - [ ] Veritabanı dosyası / sunucusu ve `keys` klasörü yalnızca servis hesabı tarafından okunabilir.
 - [ ] Düzenli, şifreli ve test edilmiş yedekler alınıyor.
 - [ ] Her personelin kendi kullanıcı hesabı var; hesaplar paylaşılmıyor, ayrılan personelin hesabı pasifleştiriliyor.

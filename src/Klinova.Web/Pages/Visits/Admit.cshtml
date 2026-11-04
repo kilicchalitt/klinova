@@ -22,9 +22,14 @@
                         <label asp-for="Input.PolyclinicId" class="form-label required-mark"></label>
                         <select asp-for="Input.PolyclinicId" class="form-select" autofocus>
                             <option value="0">Seçiniz…</option>
-                            @foreach (var pol in Model.Polyclinics)
+                            @foreach (var facility in Model.Polyclinics.GroupBy(p => p.FacilityName))
                             {
-                                <option value="@pol.Id">@pol.Name@(string.IsNullOrEmpty(pol.Location) ? "" : $" ({pol.Location})")</option>
+                                <optgroup label="@facility.Key">
+                                    @foreach (var pol in facility)
+                                    {
+                                        <option value="@pol.Id">@pol.Name@(string.IsNullOrEmpty(pol.Location) ? "" : $" ({pol.Location})")</option>
+                                    }
+                                </optgroup>
                             }
                         </select>
                         <span asp-validation-for="Input.PolyclinicId" class="text-danger small"></span>
@@ -33,9 +38,10 @@
                         <label asp-for="Input.DoctorId" class="form-label"></label>
                         <select asp-for="Input.DoctorId" class="form-select">
                             <option value="">Sıradaki uygun hekim</option>
-                            @foreach (var group in Model.Doctors.GroupBy(d => d.PolyclinicName))
+                            @foreach (var group in Model.Doctors.GroupBy(d => d.PolyclinicId))
                             {
-                                <optgroup label="@group.Key">
+                                var pol = Model.Polyclinics.FirstOrDefault(p => p.Id == group.Key);
+                                <optgroup label="@(pol is null ? "" : $"{pol.Name} — {pol.FacilityName}")">
                                     @foreach (var d in group)
                                     {
                                         <option value="@d.Id">@d.FullName</option>

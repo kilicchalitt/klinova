@@ -1,0 +1,47 @@
+@page
+@model Klinova.Web.Pages.Admin.HolidaysModel
+@{
+    ViewData["Title"] = "Resmî Tatiller";
+    var tr = CultureInfo.GetCultureInfo("tr-TR");
+}
+<div class="page-header">
+    <div><h1 class="page-title">Resmî Tatiller</h1><p class="page-subtitle">Tatil günlerinde randevu verilmez. Sabit tarihli millî bayramlar otomatik eklenir; Ramazan ve Kurban Bayramı tarihlerini her yıl ekleyin.</p></div>
+    <div class="btn-group">
+        <a class="btn btn-light" asp-route-year="@(Model.Year - 1)"><i class="bi bi-chevron-left"></i></a>
+        <span class="btn btn-light disabled fw-semibold">@Model.Year</span>
+        <a class="btn btn-light" asp-route-year="@(Model.Year + 1)"><i class="bi bi-chevron-right"></i></a>
+    </div>
+</div>
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card">
+            <ul class="list-group list-group-flush">
+                @if (Model.Items.Count == 0) { <li class="list-group-item text-body-secondary">Bu yıl için tatil tanımlı değil.</li> }
+                @foreach (var h in Model.Items)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><span class="fw-medium">@h.Date.ToString("d MMMM yyyy, dddd", tr)</span> · @h.Name @if (h.ClosedFrom is { } from) { <span class="badge text-bg-light border">@from.ToString("HH:mm", CultureInfo.InvariantCulture)'den itibaren</span> }</span>
+                        <form method="post" asp-page-handler="Delete" asp-route-year="@Model.Year">
+                            <input type="hidden" name="id" value="@h.Id" />
+                            <button class="btn btn-sm btn-link text-danger" data-confirm="Tatil silinsin mi?" aria-label="Sil"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-plus-lg me-2"></i>Tatil Ekle</div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="Add" class="row g-2">
+                    <div class="col-6"><label asp-for="Input.Date" class="form-label small"></label><input asp-for="Input.Date" type="date" class="form-control" /></div>
+                    <div class="col-6"><label asp-for="Input.ClosedFrom" class="form-label small"></label><input asp-for="Input.ClosedFrom" type="time" class="form-control" /></div>
+                    <div class="col-12"><label asp-for="Input.Name" class="form-label small required-mark"></label><input asp-for="Input.Name" class="form-control" placeholder="Örn. Ramazan Bayramı 1. Gün" /></div>
+                    <div class="col-12"><div class="form-text">Yarım gün için saat girin (ör. arife günü 13:00); tam gün için boş bırakın.</div></div>
+                    <div class="col-12"><button class="btn btn-primary">Ekle</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

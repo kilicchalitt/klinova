@@ -1,0 +1,63 @@
+@page
+@model Klinova.Web.Pages.Appointments.BookModel
+@{
+    ViewData["Title"] = Model.RescheduleId is null ? "Randevu Ver" : "Randevu Değiştir";
+    var p = Model.Patient;
+    var tr = CultureInfo.GetCultureInfo("tr-TR");
+}
+<partial name="_PageHeader" model='new PageHeaderModel((string)ViewData["Title"]!, $"{p.FullName} · Dosya No {p.FileNumber}{(string.IsNullOrEmpty(p.Phone) ? "" : " · " + p.Phone)}")' />
+
+@if (!string.IsNullOrWhiteSpace(p.MedicalAlerts))
+{
+    <div class="alert alert-medical"><i class="bi bi-exclamation-octagon-fill me-2"></i><strong>Tıbbi uyarı:</strong> @p.MedicalAlerts</div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <input type="hidden" name="patientId" value="@Model.PatientId" />
+            <input type="hidden" name="rescheduleId" value="@Model.RescheduleId" />
+            <div class="col-md-6">
+                <label class="form-label" for="polyclinicId"><span class="step-badge">1</span>Poliklinik</label>
+                <select id="polyclinicId" name="polyclinicId" class="form-select" data-autosubmit autofocus>
+                    <option value="">Seçiniz…</option>
+                    @foreach (var pol in Model.Polyclinics) { <option value="@pol.Id" selected="@(pol.Id == Model.PolyclinicId)">@pol.Name</option> }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="doctorId"><span class="step-badge">2</span>Hekim</label>
+                <select id="doctorId" name="doctorId" class="form-select" data-autosubmit disabled="@(Model.PolyclinicId is null)">
+                    <option value="">Fark etmez</option>
+                    @foreach (var d in Model.Doctors) { <option value="@d.Id" selected="@(d.Id == Model.DoctorId)">@d.Name</option> }
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.Restriction is { } restriction)
+{
+    <div class="alert alert-warning small">
+        <i class="bi bi-info-circle me-1"></i>Hastanın gitmediği randevu nedeniyle @restriction.Until.ToString("d MMMM yyyy", tr) tarihine kadar online randevu kısıtlaması var. Kurum personeli randevu verebilir.
+    </div>
+}
+
+@if (Model.Picker is { } picker)
+{
+    <form method="post" asp-route-patientId="@Model.PatientId" asp-route-polyclinicId="@Model.PolyclinicId" asp-route-doctorId="@Model.DoctorId" asp-route-rescheduleId="@Model.RescheduleId" asp-route-from="@picker.From.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">
+        <h2 class="h6 mb-2"><span class="step-badge">3</span>Gün ve saat</h2>
+        <partial name="_SlotPicker" model="picker" />
+        @if (picker.Slots.Count > 0)
+        {
+            <div class="card mt-3">
+                <div class="card-body row g-3 align-items-end">
+                    <div class="col-md-8">
+                        <label class="form-label" for="note">Not</label>
+                        <input id="note" name="note" class="form-control" maxlength="@Klinova.Domain.Appointments.Appointment.NoteMaxLength" placeholder="Örn. Telefonla alındı, kontrol randevusu" />
+                    </div>
+                    <div class="col-md-4 d-grid"><button class="btn btn-primary btn-lg"><i class="bi bi-check2-circle me-1"></i>Randevuyu Kaydet</button></div>
+                </div>
+            </div>
+        }
+    </form>
+}

@@ -1,6 +1,7 @@
 @page
 @model ErrorModel
 @{
+    Layout = User.IsInRole(Roles.Patient) ? "_PortalLayout" : "_Layout";
     var (title, message, icon) = Model.StatusCodeValue switch
     {
         404 => ("Sayfa bulunamadı", "Aradığınız kayıt veya sayfa mevcut değil ya da kaldırılmış olabilir.", "bi-search"),

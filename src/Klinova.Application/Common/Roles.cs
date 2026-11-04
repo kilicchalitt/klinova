@@ -15,7 +15,14 @@ public static class Roles
     /// <summary>Cashier ("vezne"): payments and revenue reports.</summary>
     public const string Cashier = "Cashier";
 
-    public static readonly IReadOnlyList<string> All = [Admin, Reception, Physician, Cashier];
+    /// <summary>Patients using the online portal. Never combined with a staff role.</summary>
+    public const string Patient = "Patient";
+
+    /// <summary>Roles of institution staff, i.e. everyone who may use the staff application.</summary>
+    public static readonly IReadOnlyList<string> Staff = [Admin, Reception, Physician, Cashier];
+
+    /// <summary>Every role known to the application.</summary>
+    public static readonly IReadOnlyList<string> All = [Admin, Reception, Physician, Cashier, Patient];
 
     public static string DisplayName(string role) => role switch
     {
@@ -23,6 +30,7 @@ public static class Roles
         Reception => "Hasta Kabul",
         Physician => "Hekim",
         Cashier => "Vezne",
+        Patient => "Hasta",
         _ => role,
     };
 }

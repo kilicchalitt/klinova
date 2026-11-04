@@ -1,0 +1,112 @@
+@page
+@model Klinova.Web.Pages.Portal.AppointmentsModel
+@using Klinova.Domain.Appointments
+@{
+    ViewData["Title"] = "Randevularım";
+    var tr = CultureInfo.GetCultureInfo("tr-TR");
+}
+<div class="page-header">
+    <div><h1 class="page-title">Randevularım</h1><p class="page-subtitle">Yaklaşan randevularınızı değiştirebilir veya iptal edebilirsiniz.</p></div>
+    <a asp-page="Book" class="btn btn-primary"><i class="bi bi-calendar-plus me-1"></i>Yeni Randevu</a>
+</div>
+
+<h2 class="h6 text-uppercase text-body-secondary">Yaklaşan</h2>
+@if (Model.Upcoming.Count == 0)
+{
+    <div class="card mb-4"><div class="empty-state"><i class="bi bi-calendar"></i>Yaklaşan randevunuz yok.</div></div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        @foreach (var a in Model.Upcoming)
+        {
+            var cancellable = Model.CanCancel(a);
+            <div class="col-md-6">
+                <div class="card appointment-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="appointment-date">@a.Date.ToString("d MMMM yyyy", tr) · @a.StartTime.ToString("HH:mm", CultureInfo.InvariantCulture)</div>
+                                <div class="text-body-secondary small">@a.Date.ToString("dddd", tr)</div>
+                            </div>
+                            <span class="badge text-bg-light border font-monospace-num" title="Randevu kodu">@a.ConfirmationCode</span>
+                        </div>
+                        <div class="mt-2 fw-medium">@a.PolyclinicName · @a.DoctorName</div>
+                        <div class="small text-body-secondary">@a.FacilityName</div>
+                        @if (!string.IsNullOrEmpty(a.PatientNote)) { <div class="small mt-1"><i class="bi bi-chat-left-text me-1"></i>@a.PatientNote</div> }
+                    </div>
+                    <div class="card-footer bg-white d-flex gap-2">
+                        @if (cancellable)
+                        {
+                            <a asp-page="Book" asp-route-rescheduleId="@a.Id" asp-route-polyclinicId="@a.PolyclinicId" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-arrow-left-right me-1"></i>Değiştir
+                            </a>
+                            <form method="post" asp-page-handler="Cancel" asp-route-id="@a.Id">
+                                <button class="btn btn-sm btn-outline-danger" data-confirm="Randevunuz iptal edilsin mi?"><i class="bi bi-x-circle me-1"></i>İptal Et</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="small text-body-secondary">Randevunuza az kaldığı için değişiklik için kurumu arayınız.</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@if (Model.Waiting.Count > 0)
+{
+    <h2 class="h6 text-uppercase text-body-secondary">Bekleme Listesi</h2>
+    <div class="card mb-4">
+        <ul class="list-group list-group-flush">
+            @foreach (var w in Model.Waiting)
+            {
+                <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <span>
+                        <span class="fw-medium">@w.PolyclinicName</span> · @(w.DoctorName ?? "Herhangi bir hekim") <span class="text-body-secondary">· @w.FacilityName</span>
+                        <div class="small text-body-secondary">@w.LatestDate.ToString("d MMMM", tr) tarihine kadar · @w.Status.DisplayName()</div>
+                    </span>
+                    <span class="d-flex gap-2">
+                        <a asp-page="Book" asp-route-polyclinicId="@w.PolyclinicId" class="btn btn-sm btn-outline-primary">Boş saatlere bak</a>
+                        <form method="post" asp-page-handler="LeaveWaitlist" asp-route-id="@w.Id"><button class="btn btn-sm btn-light">Vazgeç</button></form>
+                    </span>
+                </li>
+            }
+        </ul>
+    </div>
+}
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <h2 class="h6 text-uppercase text-body-secondary">Geçmiş Randevular</h2>
+        <div class="card">
+            <ul class="list-group list-group-flush">
+                @if (Model.Past.Count == 0) { <li class="list-group-item text-body-secondary small">Kayıt yok.</li> }
+                @foreach (var a in Model.Past)
+                {
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>@a.Date.ToString("dd.MM.yyyy", tr) @a.StartTime.ToString("HH:mm", CultureInfo.InvariantCulture) · @a.PolyclinicName<div class="small text-body-secondary">@a.DoctorName</div></span>
+                        <span class="badge rounded-pill align-self-center @(a.Status switch { AppointmentStatus.CheckedIn => "text-bg-success", AppointmentStatus.NoShow => "text-bg-danger", AppointmentStatus.Cancelled => "text-bg-secondary", _ => "text-bg-light" })">@a.Status.DisplayName()</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <h2 class="h6 text-uppercase text-body-secondary">Muayenelerim</h2>
+        <div class="card">
+            <ul class="list-group list-group-flush">
+                @if (Model.Visits.Count == 0) { <li class="list-group-item text-body-secondary small">Kayıt yok.</li> }
+                @foreach (var v in Model.Visits)
+                {
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between"><span class="fw-medium">@v.VisitDate.ShortDate() · @v.PolyclinicName</span><partial name="_StatusBadge" model="v.Status" /></div>
+                        <div class="small text-body-secondary">@v.DoctorName.OrDash()@(string.IsNullOrEmpty(v.Diagnosis) ? "" : $" · Tanı: {v.Diagnosis}")</div>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>

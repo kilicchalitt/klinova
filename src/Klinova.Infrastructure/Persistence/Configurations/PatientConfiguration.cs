@@ -29,7 +29,10 @@ internal sealed class PatientConfiguration : IEntityTypeConfiguration<Patient>
         b.Property(p => p.CreatedBy).HasMaxLength(FieldLengths.ShortText);
         b.Property(p => p.UpdatedBy).HasMaxLength(FieldLengths.ShortText);
 
+        b.Property(p => p.UserId).HasMaxLength(450);
+
         b.HasIndex(p => p.NationalId).IsUnique();
+        b.HasIndex(p => p.UserId).IsUnique();
         b.HasIndex(p => p.SearchName);
         b.HasIndex(p => p.Phone);
         b.HasIndex(p => new { p.LastName, p.FirstName });

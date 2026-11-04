@@ -28,7 +28,7 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label required-mark">Roller</label>
-                            @foreach (var role in Roles.All)
+                            @foreach (var role in Roles.Staff)
                             {
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="Input.Roles" value="@role" id="role-@role" checked="@Model.Input.Roles.Contains(role)" />

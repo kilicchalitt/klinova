@@ -14,5 +14,12 @@ public class Polyclinic : AuditableEntity
 
     public bool IsActive { get; set; } = true;
 
+    public int FacilityId { get; set; }
+
+    public Facility? Facility { get; set; }
+
+    /// <summary>Whether patients may book this polyclinic through the online portal.</summary>
+    public bool AcceptsOnlineAppointments { get; set; } = true;
+
     public ICollection<Doctor> Doctors { get; } = [];
 }

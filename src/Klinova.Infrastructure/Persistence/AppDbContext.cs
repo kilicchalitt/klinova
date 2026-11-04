@@ -1,8 +1,11 @@
 using Klinova.Application.Abstractions;
+using Klinova.Domain.Appointments;
 using Klinova.Domain.Auditing;
 using Klinova.Domain.Billing;
+using Klinova.Domain.Notifications;
 using Klinova.Domain.Organization;
 using Klinova.Domain.Patients;
+using Klinova.Domain.Scheduling;
 using Klinova.Domain.Services;
 using Klinova.Domain.Settings;
 using Klinova.Domain.Visits;
@@ -36,6 +39,20 @@ public abstract class AppDbContext(DbContextOptions options) : IdentityDbContext
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     public DbSet<InstitutionProfile> InstitutionProfiles => Set<InstitutionProfile>();
+
+    public DbSet<Facility> Facilities => Set<Facility>();
+
+    public DbSet<WorkSchedule> WorkSchedules => Set<WorkSchedule>();
+
+    public DbSet<DoctorLeave> DoctorLeaves => Set<DoctorLeave>();
+
+    public DbSet<Holiday> Holidays => Set<Holiday>();
+
+    public DbSet<Appointment> Appointments => Set<Appointment>();
+
+    public DbSet<WaitlistEntry> WaitlistEntries => Set<WaitlistEntry>();
+
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     public void DiscardChanges() => ChangeTracker.Clear();
 

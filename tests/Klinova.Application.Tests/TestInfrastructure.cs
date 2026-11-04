@@ -63,7 +63,10 @@ internal sealed class TestDatabase : IDisposable
     public async Task<(Polyclinic Polyclinic, MedicalService Examination, MedicalService LabTest, Patient Patient)> SeedBasicsAsync()
     {
         await using var db = CreateContext();
-        var polyclinic = new Polyclinic { Name = "Dahiliye" };
+        var facility = new Facility { Name = "Merkez", City = "Konya", District = "Selçuklu" };
+        db.Facilities.Add(facility);
+        await db.SaveChangesAsync();
+        var polyclinic = new Polyclinic { Name = "Dahiliye", FacilityId = facility.Id };
         var examination = new MedicalService { Code = "MUA", Name = "Muayene", UnitPrice = 500m };
         var lab = new MedicalService { Code = "HMG", Name = "Hemogram", UnitPrice = 120.50m };
         var patient = new Patient { FirstName = "Ayşe", LastName = "Yılmaz", NationalId = "10000000146" };

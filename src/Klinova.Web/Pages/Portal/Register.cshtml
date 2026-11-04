@@ -1,0 +1,75 @@
+@page
+@model Klinova.Web.Pages.Portal.RegisterModel
+@{
+    ViewData["Title"] = "Hesap Oluştur";
+}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <h1 class="h4 mb-1">Hasta Portalı Hesabı Oluştur</h1>
+                <p class="text-body-secondary mb-4">
+                    Daha önce kurumumuzda muayene olduysanız bilgilerinizi kayıtlarımızdakiyle aynı girin; hesabınız mevcut dosyanıza bağlanır.
+                    Güvenliğiniz için telefon numaranızın da kayıtlı numarayla eşleşmesi gerekir.
+                </p>
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Input.NationalId" class="form-label required-mark"></label>
+                            <input asp-for="Input.NationalId" class="form-control font-monospace-num" inputmode="numeric" maxlength="11" autocomplete="username" autofocus />
+                            <span asp-validation-for="Input.NationalId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Input.BirthDate" class="form-label required-mark"></label>
+                            <input asp-for="Input.BirthDate" type="date" class="form-control" />
+                            <span asp-validation-for="Input.BirthDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Input.FirstName" class="form-label required-mark"></label>
+                            <input asp-for="Input.FirstName" class="form-control" autocomplete="given-name" />
+                            <span asp-validation-for="Input.FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Input.LastName" class="form-label required-mark"></label>
+                            <input asp-for="Input.LastName" class="form-control" autocomplete="family-name" />
+                            <span asp-validation-for="Input.LastName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Input.Phone" class="form-label required-mark"></label>
+                            <input asp-for="Input.Phone" class="form-control" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" />
+                            <span asp-validation-for="Input.Phone" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Input.Email" class="form-label"></label>
+                            <input asp-for="Input.Email" class="form-control" autocomplete="email" />
+                            <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Input.Password" class="form-label required-mark"></label>
+                            <input asp-for="Input.Password" class="form-control" autocomplete="new-password" />
+                            <div class="form-text">En az 8 karakter; büyük harf, küçük harf ve rakam içermelidir.</div>
+                            <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Input.ConfirmPassword" class="form-label required-mark"></label>
+                            <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="Input.AcceptPrivacyNotice" id="accept" value="true" @(Model.Input.AcceptPrivacyNotice ? "checked" : "") />
+                                <label class="form-check-label" for="accept">
+                                    Kişisel verilerimin işlenmesine ilişkin <a asp-page="Privacy" target="_blank">aydınlatma metnini</a> okudum ve kabul ediyorum.
+                                </label>
+                            </div>
+                            <span asp-validation-for="Input.AcceptPrivacyNotice" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg mt-4"><i class="bi bi-person-check me-2"></i>Hesabımı Oluştur</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

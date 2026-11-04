@@ -10,13 +10,15 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Klinova.Web.Pages.Visits;
 
-public class DetailsModel(VisitService visits, DoctorService doctors, MedicalServiceCatalog catalog) : PageModel
+public class DetailsModel(VisitService visits, DoctorService doctors, MedicalServiceCatalog catalog, Application.Appointments.AppointmentService appointments) : PageModel
 {
     public Visit Visit { get; private set; } = default!;
 
     public List<MedicalServiceListItem> Services { get; private set; } = [];
 
     public List<LookupItem> PolyclinicDoctors { get; private set; } = [];
+
+    public Domain.Appointments.Appointment? Appointment { get; private set; }
 
     [BindProperty]
     public ExaminationInput Examination { get; set; } = new();
@@ -100,5 +102,6 @@ public class DetailsModel(VisitService visits, DoctorService doctors, MedicalSer
         Visit = await visits.GetDetailsAsync(id, ct);
         Services = await catalog.ListAsync(activeOnly: true, ct);
         PolyclinicDoctors = await doctors.LookupAsync(Visit.PolyclinicId, ct);
+        Appointment = await appointments.FindByVisitAsync(id, ct);
     }
 }

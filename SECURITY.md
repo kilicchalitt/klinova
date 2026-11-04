@@ -7,7 +7,8 @@ KVKK (Law No. 6698) and the GDPR. We take security reports seriously.
 
 | Version | Supported |
 | --- | --- |
-| 1.x | ✅ |
+| 2.x | ✅ |
+| 1.x | Security fixes until 2027-05 |
 | SOHATS desktop prototype | ❌ (retired) |
 
 ## Reporting a vulnerability
@@ -38,12 +39,17 @@ denial of service through volumetric traffic.
   per-IP rate limiting of the sign-in page.
 - No default credentials: the initial administrator password is configured or randomly
   generated, and must be changed at first sign-in.
-- Role-based authorisation with an authenticated-by-default fallback policy.
+- Role-based authorisation with a staff-only fallback policy; patient portal and staff
+  application are separated by policy.
+- Patient portal accounts are linked to an existing patient file only when name, birth date
+  and the phone number on file match, because national id, name and birth date are not secrets.
+- Registration and sign-in are rate limited per client address.
 - Anti-forgery tokens on every form, `HttpOnly` + `SameSite=Strict` cookies, HSTS.
 - Strict Content-Security-Policy without inline scripts or third-party origins;
   `X-Frame-Options: DENY`, `nosniff`, restrictive referrer and permissions policies.
 - Audit trail of all data changes; sensitive Identity fields are masked.
 - CSV exports are protected against formula injection.
+- Notification texts are kept out of informational logs; recipients are masked.
 - Dependencies are monitored by Dependabot and the code by CodeQL.
 
 ## Operator responsibilities

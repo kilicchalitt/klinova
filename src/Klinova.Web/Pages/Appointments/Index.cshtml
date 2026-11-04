@@ -1,0 +1,129 @@
+@page
+@model Klinova.Web.Pages.Appointments.IndexModel
+@using Klinova.Domain.Appointments
+@{
+    ViewData["Title"] = "Randevular";
+    var tr = CultureInfo.GetCultureInfo("tr-TR");
+    var date = Model.Date!.Value;
+    var isToday = date == Clock.Today;
+    string Url(DateOnly d) => this.Url.Page("Index", new { date = d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), facilityId = Model.FacilityId, polyclinicId = Model.PolyclinicId, doctorId = Model.DoctorId, status = Model.Status })!;
+    var active = Model.Items.Count(i => i.Status == AppointmentStatus.Booked);
+}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Randevular</h1>
+        <p class="page-subtitle">@date.ToString("d MMMM yyyy dddd", tr) · @Model.Items.Count randevu, @active bekleniyor</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <div class="btn-group">
+            <a class="btn btn-light" href="@Url(date.AddDays(-1))" aria-label="Önceki gün"><i class="bi bi-chevron-left"></i></a>
+            <a class="btn btn-light" href="@Url(Clock.Today)">Bugün</a>
+            <a class="btn btn-light" href="@Url(date.AddDays(1))" aria-label="Sonraki gün"><i class="bi bi-chevron-right"></i></a>
+        </div>
+        @if (Model.IsDesk)
+        {
+            <a asp-page="Waitlist" class="btn btn-outline-primary"><i class="bi bi-hourglass-split me-1"></i>Bekleme Listesi</a>
+            <a asp-page="/Patients/Index" class="btn btn-primary"><i class="bi bi-calendar-plus me-1"></i>Randevu Ver</a>
+        }
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-sm-6 col-lg-2">
+                <label class="form-label small" for="date">Tarih</label>
+                <input type="date" id="date" name="date" value="@date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" class="form-control" data-autosubmit />
+            </div>
+            @if (Model.Facilities.Count > 1)
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <label class="form-label small" for="facilityId">Kurum</label>
+                    <select id="facilityId" name="facilityId" class="form-select" data-autosubmit>
+                        <option value="">Tümü</option>
+                        @foreach (var f in Model.Facilities) { <option value="@f.Id" selected="@(f.Id == Model.FacilityId)">@f.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label small" for="polyclinicId">Poliklinik</label>
+                <select id="polyclinicId" name="polyclinicId" class="form-select" data-autosubmit>
+                    <option value="">Tümü</option>
+                    @foreach (var p in Model.Polyclinics) { <option value="@p.Id" selected="@(p.Id == Model.PolyclinicId)">@p.Name</option> }
+                </select>
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <label class="form-label small" for="doctorId">Hekim</label>
+                <select id="doctorId" name="doctorId" class="form-select" data-autosubmit>
+                    <option value="">Tümü</option>
+                    @foreach (var d in Model.Doctors) { <option value="@d.Id" selected="@(d.Id == Model.DoctorId)">@d.Name</option> }
+                </select>
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <label class="form-label small" for="status">Durum</label>
+                <select id="status" name="status" class="form-select" asp-items="Html.GetEnumSelectList<AppointmentStatus>()" data-autosubmit>
+                    <option value="">Tümü</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    @if (Model.Items.Count == 0)
+    {
+        <div class="empty-state"><i class="bi bi-calendar"></i>Bu gün için randevu yok.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Saat</th><th>Hasta</th><th>Poliklinik / Hekim</th><th>Kanal</th><th>Durum</th><th class="text-end">İşlem</th></tr></thead>
+                <tbody>
+                    @foreach (var a in Model.Items)
+                    {
+                        <tr>
+                            <td class="font-monospace-num fw-semibold">@a.StartTime.ToString("HH:mm", CultureInfo.InvariantCulture)<div class="small text-body-secondary">@a.ConfirmationCode</div></td>
+                            <td>
+                                <a asp-page="/Patients/Details" asp-route-id="@a.PatientId" class="fw-medium text-reset">@a.PatientName</a>
+                                <div class="small text-body-secondary">@a.PatientPhone</div>
+                                @if (!string.IsNullOrEmpty(a.PatientNote)) { <div class="small"><i class="bi bi-chat-left-text me-1"></i>@a.PatientNote</div> }
+                            </td>
+                            <td>@a.PolyclinicName<div class="small text-body-secondary">@a.DoctorName@(Model.Facilities.Count > 1 ? $" · {a.FacilityName}" : "")</div></td>
+                            <td class="small">@(a.Channel == AppointmentChannel.Online ? "Online" : "Kurum")</td>
+                            <td>
+                                <span class="badge rounded-pill @(a.Status switch { AppointmentStatus.Booked => "text-bg-primary", AppointmentStatus.CheckedIn => "text-bg-success", AppointmentStatus.NoShow => "text-bg-danger", _ => "text-bg-secondary" })">@a.Status.DisplayName()</span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                @if (a.VisitId is { } visitId)
+                                {
+                                    <a asp-page="/Visits/Details" asp-route-id="@visitId" class="btn btn-sm btn-light">Başvuru</a>
+                                }
+                                @if (Model.IsDesk && a.Status == AppointmentStatus.Booked)
+                                {
+                                    @if (isToday)
+                                    {
+                                        <form method="post" asp-page-handler="CheckIn" asp-route-id="@a.Id" class="d-inline">
+                                            <button class="btn btn-sm btn-success"><i class="bi bi-person-check me-1"></i>Kabul</button>
+                                        </form>
+                                    }
+                                    @if (a.StartsAtLocal <= Model.NowLocal)
+                                    {
+                                        <form method="post" asp-page-handler="NoShow" asp-route-id="@a.Id" asp-route-date="@date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" class="d-inline">
+                                            <button class="btn btn-sm btn-outline-danger" data-confirm="Hasta gelmedi olarak işaretlensin mi? Bu, hastanın online randevu almasını kısıtlar.">Gelmedi</button>
+                                        </form>
+                                    }
+                                    <a asp-page="Book" asp-route-patientId="@a.PatientId" asp-route-rescheduleId="@a.Id" asp-route-polyclinicId="@a.PolyclinicId" class="btn btn-sm btn-light">Değiştir</a>
+                                    <form method="post" asp-page-handler="Cancel" asp-route-id="@a.Id" asp-route-date="@date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" class="d-inline">
+                                        <input type="hidden" name="reason" value="Kurum tarafından iptal edildi." />
+                                        <button class="btn btn-sm btn-outline-secondary" data-confirm="Randevu iptal edilsin mi? Hastaya bildirim gönderilir.">İptal</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

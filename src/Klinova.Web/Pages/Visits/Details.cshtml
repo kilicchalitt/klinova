@@ -19,6 +19,10 @@
         </div>
     </div>
     <div class="d-flex flex-wrap gap-2 align-items-center">
+        @if (Model.Appointment is { } appt)
+        {
+            <span class="badge rounded-pill text-bg-light border" title="Randevu kodu @appt.ConfirmationCode"><i class="bi bi-calendar-check me-1"></i>Randevulu · @appt.StartTime.ToString("HH:mm", CultureInfo.InvariantCulture)</span>
+        }
         <partial name="_StatusBadge" model="v.Status" />
         <a asp-page="Slip" asp-route-id="@v.Id" class="btn btn-sm btn-light"><i class="bi bi-printer me-1"></i>Sıra Fişi</a>
     </div>

@@ -17,7 +17,10 @@ public sealed record DashboardSummary(
     int NewPatients,
     int OutstandingPayments,
     decimal CollectedToday,
-    IReadOnlyList<PolyclinicLoad> Polyclinics);
+    IReadOnlyList<PolyclinicLoad> Polyclinics,
+    int AppointmentsToday = 0,
+    int AppointmentsCheckedIn = 0,
+    int AppointmentsWaiting = 0);
 
 /// <summary>Figures for the start page: today's load and revenue at a glance.</summary>
 public sealed class DashboardService(IAppDbContext db, IClock clock)
@@ -36,14 +39,15 @@ public sealed class DashboardService(IAppDbContext db, IClock clock)
 
         var polyclinics = (await db.Polyclinics.AsNoTracking()
                 .Where(p => p.IsActive)
-                .Select(p => new { p.Id, p.Name })
+                .Select(p => new { p.Id, p.Name, Facility = p.Facility!.Name })
                 .ToListAsync(ct))
-            .SortBy(p => p.Name);
+            .SortBy(p => p.Facility + " " + p.Name);
+        var multipleFacilities = polyclinics.Select(p => p.Facility).Distinct().Count() > 1;
 
         var loads = polyclinics
             .Select(p => new PolyclinicLoad(
                 p.Id,
-                p.Name,
+                multipleFacilities ? $"{p.Name} — {p.Facility}" : p.Name,
                 todays.Where(t => t.PolyclinicId == p.Id && t.Status == VisitStatus.Waiting).Sum(t => t.Count),
                 todays.Where(t => t.PolyclinicId == p.Id && t.Status == VisitStatus.InExamination).Sum(t => t.Count),
                 todays.Where(t => t.PolyclinicId == p.Id && t.Status == VisitStatus.Completed).Sum(t => t.Count)))
@@ -62,6 +66,12 @@ public sealed class DashboardService(IAppDbContext db, IClock clock)
 
         int Count(VisitStatus s) => todays.Where(t => t.Status == s).Sum(t => t.Count);
 
+        var appointments = await db.Appointments.AsNoTracking()
+            .Where(a => a.Date == today && a.Status != Domain.Appointments.AppointmentStatus.Cancelled)
+            .GroupBy(a => a.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
         return new DashboardSummary(
             today,
             todays.Sum(t => t.Count),
@@ -72,6 +82,9 @@ public sealed class DashboardService(IAppDbContext db, IClock clock)
             newPatients,
             outstanding,
             collected,
-            loads);
+            loads,
+            appointments.Sum(a => a.Count),
+            appointments.Where(a => a.Status == Domain.Appointments.AppointmentStatus.CheckedIn).Sum(a => a.Count),
+            appointments.Where(a => a.Status == Domain.Appointments.AppointmentStatus.Booked).Sum(a => a.Count));
     }
 }

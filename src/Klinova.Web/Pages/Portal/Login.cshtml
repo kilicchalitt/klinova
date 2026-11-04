@@ -1,0 +1,38 @@
+@page
+@model Klinova.Web.Pages.Portal.LoginModel
+@{
+    ViewData["Title"] = "Giriş";
+}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <h1 class="h4 mb-1">Hasta Portalı Girişi</h1>
+                <p class="text-body-secondary mb-4">Randevu almak ve randevularınızı yönetmek için giriş yapın.</p>
+                <form method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    <div class="mb-3">
+                        <label asp-for="Input.NationalId" class="form-label"></label>
+                        <input asp-for="Input.NationalId" class="form-control form-control-lg font-monospace-num" inputmode="numeric" maxlength="11" autocomplete="username" autofocus />
+                        <span asp-validation-for="Input.NationalId" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Input.Password" class="form-label"></label>
+                        <input asp-for="Input.Password" class="form-control form-control-lg" autocomplete="current-password" />
+                        <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                    </div>
+                    <div class="form-check mb-4">
+                        <input asp-for="Input.RememberMe" class="form-check-input" />
+                        <label asp-for="Input.RememberMe" class="form-check-label"></label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100"><i class="bi bi-box-arrow-in-right me-2"></i>Giriş Yap</button>
+                </form>
+                <hr class="my-4" />
+                <p class="text-center mb-0">Hesabınız yok mu? <a asp-page="Register">Hemen oluşturun</a></p>
+            </div>
+        </div>
+        <p class="small text-body-secondary text-center mt-3">Şifrenizi unuttuysanız hasta kabul biriminden şifre sıfırlama talep edebilirsiniz.</p>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
