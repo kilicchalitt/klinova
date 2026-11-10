@@ -193,7 +193,7 @@ Please report vulnerabilities privately, see [SECURITY.md](SECURITY.md).
 ## Tech stack
 
 ASP.NET Core 10 (Razor Pages) · Entity Framework Core 10 (SQLite or SQL Server) ·
-ASP.NET Core Identity · Bootstrap 5 · xUnit (186 tests) · Docker · GitHub Actions, CodeQL, Dependabot.
+ASP.NET Core Identity · Bootstrap 5 · xUnit (189 tests) · Docker · GitHub Actions, CodeQL, Dependabot.
 See [architecture](docs/architecture.md) and [development guide](docs/development.md).
 
 ## Contributing
