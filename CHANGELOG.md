@@ -6,32 +6,7 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-### Added
-
-- Patient portal inbox ("Bildirimlerim"): appointment confirmations, reminders, cancellations and
-  waiting-list messages are shown to patients in the portal with an unread counter. No SMS or e-mail
-  provider is required.
-- Demo mode creates a ready-to-use patient portal account (national id `10000000146`) with an
-  appointment and a notification.
-- Fixed local-only demo passwords for `dotnet run` in the Development environment.
-
-### Changed
-
-- SMS and e-mail messages are only queued when the corresponding provider is configured.
-
-### Security
-
-- The initial administrator and demo passwords are no longer generated and written to the log
-  (reported by CodeQL as clear-text storage of sensitive data). The initial administrator password
-  is now required while no administrator exists; start-up stops with a clear message otherwise, and
-  `docker compose` refuses to start without `KLINOVA_ADMIN_PASSWORD`.
-
-### Fixed
-
-- Start-up no longer logs misleading warnings (unordered `First` queries, SQLite table rebuilds,
-  unencrypted development keys).
-
-## [2.0.0] - 2026-11-04
+## [2.0.0] - 2026-11-10
 
 Online appointments, patient portal and multi-facility support.
 See [ADR-0002](docs/adr/0002-appointments-and-patient-portal.md).
@@ -53,6 +28,12 @@ See [ADR-0002](docs/adr/0002-appointments-and-patient-portal.md).
   administration page; confirmation, reminder, cancellation and waiting-list messages.
 - **Background jobs** for notification delivery and appointment maintenance.
 - Staff appointment calendar, desk booking, waiting-list overview, appointment figures on the dashboard.
+- Patient portal inbox ("Bildirimlerim"): appointment confirmations, reminders, cancellations and
+  waiting-list messages are shown to patients in the portal with an unread counter. No SMS or e-mail
+  provider is required.
+- Demo mode creates a ready-to-use patient portal account (national id `10000000146`) with an
+  appointment and a notification.
+- Fixed local-only demo passwords for `dotnet run` in the Development environment.
 
 ### Changed
 
@@ -60,6 +41,19 @@ See [ADR-0002](docs/adr/0002-appointments-and-patient-portal.md).
 - Polyclinic names are unique per facility; drop-downs, dashboard and revenue report show the
   facility when several exist.
 - Test tooling and GitHub Actions updated to their latest versions.
+- SMS and e-mail messages are only queued when the corresponding provider is configured.
+
+### Security
+
+- The initial administrator and demo passwords are no longer generated and written to the log
+  (reported by CodeQL as clear-text storage of sensitive data). The initial administrator password
+  is now required while no administrator exists; start-up stops with a clear message otherwise, and
+  `docker compose` refuses to start without `KLINOVA_ADMIN_PASSWORD`.
+
+### Fixed
+
+- Start-up no longer logs misleading warnings (unordered `First` queries, SQLite table rebuilds,
+  unencrypted development keys).
 
 ### Upgrade notes
 

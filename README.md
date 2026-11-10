@@ -282,7 +282,7 @@ Güvenlik açığı bulduysanız lütfen herkese açık issue açmayın; [SECURI
 | **Veritabanı** | SQLite (varsayılan) veya SQL Server; şema migration'larla otomatik ve veri kaybetmeden güncellenir |
 | **Arka plan işleri** | Bildirim gönderimi, randevu hatırlatma, "gelmedi" işaretleme, bekleme listesi süresi |
 | **Mimari** | Katmanlı yapı: `Domain` → `Application` → `Infrastructure` → `Web` |
-| **Kalite** | 186 otomatik test (birim, entegrasyon, uçtan uca HTTP), CI, CodeQL, Dependabot |
+| **Kalite** | 189 otomatik test (birim, entegrasyon, uçtan uca HTTP), CI, CodeQL, Dependabot |
 | **Dağıtım** | Docker imajı (root olmayan kullanıcı), docker compose, IIS, systemd |
 
 Ayrıntılar: [Mimari](docs/architecture.md) · [Yapılandırma](docs/configuration.md) · [Geliştirme](docs/development.md)
